@@ -4,6 +4,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import StoresSection from "@/components/StoresSection";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
+import AIChatbot from "@/components/AIChatbot";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
         <CallToAction />
       </main>
       <Footer />
+      <AIChatbot />
     </div>
   );
 };
