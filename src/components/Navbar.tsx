@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, User, Shield, Store } from "lucide-react";
+import { Search, Menu, User, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo-transparent.png";
@@ -74,14 +74,6 @@ const Navbar = () => {
                 العروض
               </Button>
             </Link>
-            {isAdmin && (
-              <Link to="/admin">
-                <Button variant="outline" size="sm" className="text-base border-2">
-                  <Shield className="ml-1 h-4 w-4" />
-                  لوحة التحكم
-                </Button>
-              </Link>
-            )}
             {(isMerchant || isAdmin) && (
               <Link to="/merchant">
                 <Button variant="outline" size="sm" className="text-base border-2">
