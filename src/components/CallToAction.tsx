@@ -1,7 +1,10 @@
 import { Store, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const CallToAction = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 gradient-primary relative overflow-hidden">
       {/* Decorative Elements */}
@@ -58,6 +61,7 @@ const CallToAction = () => {
           <div className="flex flex-col sm:flex-row gap-5 justify-center items-center pt-6">
             <Button
               size="xl"
+              onClick={() => navigate("/auth")}
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/95 shadow-glow hover:shadow-xl hover:scale-105 transition-smooth group text-lg px-12"
             >
               سجل متجرك مجاناً
@@ -66,6 +70,7 @@ const CallToAction = () => {
             <Button
               size="xl"
               variant="outline"
+              onClick={() => navigate("/plans")}
               className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/15 text-lg px-12 hover:scale-105 transition-smooth"
             >
               تعرف على المزايا
