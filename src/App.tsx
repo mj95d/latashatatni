@@ -19,6 +19,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout";
+import * as AdminPages from "./pages/admin";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,23 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/merchant" element={<Merchant />} />
+          
+          {/* Admin Dashboard Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminPages.Dashboard />} />
+            <Route path="users" element={<AdminPages.Users />} />
+            <Route path="merchant-requests" element={<AdminPages.MerchantRequests />} />
+            <Route path="stores" element={<AdminPages.Stores />} />
+            <Route path="products" element={<AdminPages.Products />} />
+            <Route path="offers" element={<AdminPages.Offers />} />
+            <Route path="cities" element={<AdminPages.Cities />} />
+            <Route path="payments" element={<AdminPages.Payments />} />
+            <Route path="reports" element={<AdminPages.Reports />} />
+            <Route path="logs" element={<AdminPages.Logs />} />
+            <Route path="roles" element={<AdminPages.Roles />} />
+            <Route path="settings" element={<AdminPages.AdminSettings />} />
+          </Route>
+          
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />

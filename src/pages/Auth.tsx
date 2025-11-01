@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, User, Phone } from "lucide-react";
+import { Lock, Mail, User, Phone, Shield } from "lucide-react";
 import logo from "@/assets/logo-transparent.png";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,7 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -240,6 +242,18 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Admin Access - Hidden Link */}
+        {isAdmin && (
+          <div className="text-center mt-4">
+            <Link to="/admin/dashboard">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Shield className="h-4 w-4" />
+                لوحة التحكم
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <p className="text-center text-sm text-muted-foreground mt-4">
           بإنشاء حساب، أنت توافق على{" "}
