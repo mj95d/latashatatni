@@ -1,4 +1,5 @@
 import { MapPin, Mail, Phone, Facebook, Twitter, Instagram } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -7,10 +8,12 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img 
+                src={logo} 
+                alt="لا تشتتني" 
+                className="w-12 h-12 object-contain"
+              />
               <h3 className="text-xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
                 لا تشتتني
               </h3>

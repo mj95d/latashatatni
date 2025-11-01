@@ -1,6 +1,7 @@
 import { MapPin, Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   return (
@@ -8,10 +9,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-primary-foreground" />
-            </div>
+          <div className="flex items-center gap-3">
+            <img 
+              src={logo} 
+              alt="لا تشتتني" 
+              className="w-12 h-12 object-contain"
+            />
             <h1 className="text-xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
               لا تشتتني
             </h1>
