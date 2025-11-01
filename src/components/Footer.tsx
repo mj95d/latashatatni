@@ -1,5 +1,6 @@
-import { MapPin, Mail, Phone, Facebook, Twitter, Instagram } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { Mail, Phone, Facebook, Twitter, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
+import logo from "@/assets/logo-transparent.png";
 
 const Footer = () => {
   return (
@@ -30,24 +31,34 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-5">روابط سريعة</h4>
             <ul className="space-y-3 text-base text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                <Link to="/about" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-smooth">عن المنصة</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-smooth">كيف تعمل؟</span>
-                </a>
+                <Link to="/stores" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-smooth">المتاجر</span>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-smooth">للتجار</span>
-                </a>
+                <Link to="/offers" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-smooth">العروض</span>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-smooth">المدونة</span>
-                </a>
+                <Link to="/cities" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-smooth">المدن</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/tourism" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-smooth">السياحة</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/plans" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-1 transition-smooth">الاشتراكات</span>
+                </Link>
               </li>
             </ul>
           </div>
@@ -57,24 +68,24 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-5">الدعم</h4>
             <ul className="space-y-3 text-base text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                <Link to="/help" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-smooth">الأسئلة الشائعة</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                <Link to="/privacy" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-smooth">سياسة الخصوصية</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                <Link to="/terms" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-smooth">الشروط والأحكام</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
+                <Link to="/contact" className="hover:text-primary transition-smooth inline-flex items-center gap-2 group">
                   <span className="group-hover:translate-x-1 transition-smooth">اتصل بنا</span>
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

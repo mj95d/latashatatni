@@ -1,10 +1,29 @@
-import { Search, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo-transparent.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-soft">
       <div className="container mx-auto px-4 lg:px-6">
@@ -52,9 +71,20 @@ const Navbar = () => {
                 العروض
               </Button>
             </Link>
-            <Button variant="hero" size="sm" className="mr-2">
-              للتجار
-            </Button>
+            {user ? (
+              <Link to="/profile">
+                <Button variant="hero" size="sm" className="mr-2">
+                  <User className="ml-1 h-4 w-4" />
+                  حسابي
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button variant="hero" size="sm" className="mr-2">
+                  تسجيل الدخول
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
