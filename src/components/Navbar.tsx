@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, User, Shield } from "lucide-react";
+import { Search, Menu, User, Shield, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo-transparent.png";
@@ -10,7 +10,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isMerchant } = useUserRole();
 
   useEffect(() => {
     // Get initial session
@@ -78,6 +78,14 @@ const Navbar = () => {
                 <Button variant="outline" size="sm" className="text-base border-2">
                   <Shield className="ml-1 h-4 w-4" />
                   لوحة التحكم
+                </Button>
+              </Link>
+            )}
+            {(isMerchant || isAdmin) && (
+              <Link to="/merchant">
+                <Button variant="outline" size="sm" className="text-base border-2">
+                  <Store className="ml-1 h-4 w-4" />
+                  لوحة التاجر
                 </Button>
               </Link>
             )}

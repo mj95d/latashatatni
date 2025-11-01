@@ -61,7 +61,7 @@ const CallToAction = () => {
           <div className="flex flex-col sm:flex-row gap-5 justify-center items-center pt-6">
             <Button
               size="xl"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/merchant")}
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/95 shadow-glow hover:shadow-xl hover:scale-105 transition-smooth group text-lg px-12"
             >
               سجل متجرك مجاناً

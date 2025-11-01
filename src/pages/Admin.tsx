@@ -11,13 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Store, MapPin, Tag, Building, Loader2 } from "lucide-react";
+import { Store, MapPin, Tag, Building, Loader2, UserCheck, UserX, Clock } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useUserRole();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const [merchantRequests, setMerchantRequests] = useState<any[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
 
   // Cities form state
   const [cityForm, setCityForm] = useState({
@@ -65,8 +67,82 @@ const Admin = () => {
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate("/");
+    } else if (isAdmin) {
+      fetchMerchantRequests();
     }
   }, [isAdmin, loading, navigate]);
+
+  const fetchMerchantRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const { data, error } = await supabase
+        .from("merchant_requests")
+        .select(`
+          *,
+          profiles:user_id (full_name, email: id)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMerchantRequests(data || []);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء جلب طلبات التجار",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const handleMerchantRequest = async (requestId: string, userId: string, action: "approve" | "reject") => {
+    try {
+      setSubmitting(true);
+
+      // تحديث حالة الطلب
+      const { error: updateError } = await supabase
+        .from("merchant_requests")
+        .update({
+          status: action === "approve" ? "approved" : "rejected",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .eq("id", requestId);
+
+      if (updateError) throw updateError;
+
+      // إذا تمت الموافقة، إضافة دور التاجر
+      if (action === "approve") {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: userId,
+            role: "merchant"
+          });
+
+        if (roleError) throw roleError;
+      }
+
+      toast({
+        title: action === "approve" ? "تمت الموافقة" : "تم الرفض",
+        description: action === "approve" 
+          ? "تمت الموافقة على الطلب بنجاح" 
+          : "تم رفض الطلب"
+      });
+
+      fetchMerchantRequests();
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ أثناء معالجة الطلب",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,7 +237,11 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="cities" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsList className="grid w-full grid-cols-5 mb-8">
+              <TabsTrigger value="merchants">
+                <Store className="w-4 h-4 ml-2" />
+                طلبات التجار
+              </TabsTrigger>
               <TabsTrigger value="cities">
                 <MapPin className="w-4 h-4 ml-2" />
                 المدن
@@ -179,6 +259,97 @@ const Admin = () => {
                 العروض
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="merchants">
+              <Card className="p-6">
+                <h2 className="text-2xl font-bold mb-6">طلبات التجار</h2>
+                
+                {loadingRequests ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : merchantRequests.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Store className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>لا توجد طلبات جديدة</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {merchantRequests.map((request) => (
+                      <Card key={request.id} className="p-6 border-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-xl font-bold">{request.business_name}</h3>
+                              {request.status === "pending" && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+                                  <Clock className="w-4 h-4" />
+                                  قيد المراجعة
+                                </span>
+                              )}
+                              {request.status === "approved" && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                  <UserCheck className="w-4 h-4" />
+                                  تمت الموافقة
+                                </span>
+                              )}
+                              {request.status === "rejected" && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                                  <UserX className="w-4 h-4" />
+                                  مرفوض
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="grid md:grid-cols-2 gap-3 text-sm text-muted-foreground">
+                              <div>
+                                <span className="font-semibold">الهاتف:</span> {request.phone}
+                              </div>
+                              {request.city && (
+                                <div>
+                                  <span className="font-semibold">المدينة:</span> {request.city}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {request.business_description && (
+                              <p className="text-muted-foreground">{request.business_description}</p>
+                            )}
+                            
+                            <div className="text-xs text-muted-foreground">
+                              تاريخ التقديم: {new Date(request.created_at).toLocaleDateString('ar-SA')}
+                            </div>
+                          </div>
+                          
+                          {request.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleMerchantRequest(request.id, request.user_id, "approve")}
+                                disabled={submitting}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <UserCheck className="w-4 h-4 ml-1" />
+                                موافقة
+                              </Button>
+                              <Button
+                                onClick={() => handleMerchantRequest(request.id, request.user_id, "reject")}
+                                disabled={submitting}
+                                size="sm"
+                                variant="destructive"
+                              >
+                                <UserX className="w-4 h-4 ml-1" />
+                                رفض
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
 
             <TabsContent value="cities">
               <Card className="p-6">
