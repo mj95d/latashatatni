@@ -122,51 +122,168 @@ const Merchant = () => {
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-muted/30">
         <Navbar />
         <main className="flex-1 container mx-auto px-4 lg:px-6 py-16 md:py-24">
-          <div className="text-center mb-16 space-y-6">
+          <div className="text-center mb-12 space-y-4">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4 shadow-glow">
               <Store className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text">
               لوحة تحكم التاجر
             </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              إدارة متاجرك وعروضك بكل سهولة
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Store className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">المتاجر</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">العروض النشطة</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">قيد المراجعة</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Store className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">إجمالي المشاهدات</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </Card>
           </div>
 
           <Tabs defaultValue="stores" className="max-w-6xl mx-auto">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="stores">متاجري</TabsTrigger>
-              <TabsTrigger value="offers">عروضي</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 h-14 mb-8">
+              <TabsTrigger value="stores" className="text-base">
+                <Store className="w-4 h-4 ml-2" />
+                متاجري
+              </TabsTrigger>
+              <TabsTrigger value="offers" className="text-base">
+                <CheckCircle className="w-4 h-4 ml-2" />
+                عروضي
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="text-base">
+                <Clock className="w-4 h-4 ml-2" />
+                الإحصائيات
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="stores" className="mt-8">
-              <Card className="p-8">
-                <div className="text-center py-12">
-                  <Store className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-2xl font-bold mb-4">متاجرك</h3>
-                  <p className="text-muted-foreground mb-6">
-                    يمكنك إدارة متاجرك وإضافة متاجر جديدة من هنا
+              <Card className="p-8 border-2">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold">متاجرك</h3>
+                  <Button size="lg" className="shadow-glow">
+                    <Store className="w-4 h-4 ml-2" />
+                    إضافة متجر جديد
+                  </Button>
+                </div>
+                <div className="text-center py-16">
+                  <Store className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
+                  <h4 className="text-xl font-semibold mb-3">لا توجد متاجر حالياً</h4>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    ابدأ بإضافة متجرك الأول وعرض منتجاتك للعملاء
                   </p>
-                  <Button onClick={() => navigate("/stores")} size="lg">
-                    عرض المتاجر
+                  <Button onClick={() => navigate("/stores")} variant="outline" size="lg">
+                    تصفح المتاجر
                   </Button>
                 </div>
               </Card>
             </TabsContent>
 
             <TabsContent value="offers" className="mt-8">
-              <Card className="p-8">
-                <div className="text-center py-12">
-                  <Store className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-2xl font-bold mb-4">عروضك</h3>
-                  <p className="text-muted-foreground mb-6">
-                    يمكنك إدارة عروضك وإضافة عروض جديدة من هنا
+              <Card className="p-8 border-2">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold">عروضك</h3>
+                  <Button size="lg" className="shadow-glow">
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                    إضافة عرض جديد
+                  </Button>
+                </div>
+                <div className="text-center py-16">
+                  <CheckCircle className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
+                  <h4 className="text-xl font-semibold mb-3">لا توجد عروض حالياً</h4>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    أضف عروضك الحصرية واجذب المزيد من العملاء
                   </p>
-                  <Button onClick={() => navigate("/offers")} size="lg">
-                    عرض العروض
+                  <Button onClick={() => navigate("/offers")} variant="outline" size="lg">
+                    تصفح العروض
                   </Button>
                 </div>
               </Card>
             </TabsContent>
+
+            <TabsContent value="analytics" className="mt-8">
+              <Card className="p-8 border-2">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold mb-2">الإحصائيات</h3>
+                  <p className="text-muted-foreground">تتبع أداء متاجرك وعروضك</p>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-muted/50 rounded-lg">
+                    <h4 className="font-semibold mb-4">المشاهدات الأسبوعية</h4>
+                    <div className="h-40 flex items-center justify-center text-muted-foreground">
+                      لا توجد بيانات كافية
+                    </div>
+                  </div>
+                  <div className="p-6 bg-muted/50 rounded-lg">
+                    <h4 className="font-semibold mb-4">العروض الأكثر شعبية</h4>
+                    <div className="h-40 flex items-center justify-center text-muted-foreground">
+                      لا توجد بيانات كافية
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
           </Tabs>
+
+          <Card className="mt-8 p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Store className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">نصائح للتجار</h3>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>• أضف صوراً واضحة وجذابة لمنتجاتك</li>
+                  <li>• حدث عروضك بانتظام لجذب المزيد من العملاء</li>
+                  <li>• تفاعل مع تقييمات العملاء بشكل احترافي</li>
+                  <li>• استخدم الوصف التفصيلي لمنتجاتك وخدماتك</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
         </main>
         <Footer />
       </div>
