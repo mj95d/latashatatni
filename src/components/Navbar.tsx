@@ -6,6 +6,7 @@ import logo from "@/assets/logo-transparent.png";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import AdminNotifications from "./AdminNotifications";
 
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
@@ -89,6 +90,7 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
+            {isAdmin && <AdminNotifications />}
             {user ? (
               <Link to="/profile">
                 <Button variant="hero" size="sm" className="mr-2">
