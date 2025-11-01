@@ -1,7 +1,8 @@
-import { MapPin, Search, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-transparent.png";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -9,7 +10,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center gap-3 group cursor-pointer">
+          <Link to="/" className="flex items-center gap-3 group cursor-pointer">
             <div className="w-14 h-14 flex items-center justify-center rounded-xl transition-smooth group-hover:scale-105">
               <img 
                 src={logo} 
@@ -20,7 +21,7 @@ const Navbar = () => {
             <h1 className="text-2xl font-bold bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent hidden sm:block">
               لا تشتتني
             </h1>
-          </div>
+          </Link>
 
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden lg:flex flex-1 max-w-lg mx-8">
@@ -36,15 +37,21 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
-              الرئيسية
-            </Button>
-            <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
-              المتاجر
-            </Button>
-            <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
-              العروض
-            </Button>
+            <Link to="/">
+              <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
+                الرئيسية
+              </Button>
+            </Link>
+            <Link to="/stores">
+              <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
+                المتاجر
+              </Button>
+            </Link>
+            <Link to="/offers">
+              <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
+                العروض
+              </Button>
+            </Link>
             <Button variant="hero" size="sm" className="mr-2">
               للتجار
             </Button>
