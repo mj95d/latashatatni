@@ -302,10 +302,19 @@ const Stores = () => {
 
                   {/* Actions */}
                   <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Button variant="default" className="w-full">
-                      عرض المتجر
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + ' ' + store.city)}`, '_blank')}
+                    >
+                      <MapPin className="w-4 h-4 ml-1" />
+                      الموقع
                     </Button>
-                    <Button variant="outline" className="w-full border-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-2"
+                      onClick={() => window.open(`tel:${store.phone}`, '_self')}
+                    >
                       <Phone className="w-4 h-4 ml-1" />
                       اتصال
                     </Button>
