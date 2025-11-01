@@ -296,6 +296,7 @@ export type Database = {
           address: string | null
           category_id: string | null
           city_id: string | null
+          commercial_document: string | null
           cover_url: string | null
           created_at: string | null
           description: string | null
@@ -319,6 +320,7 @@ export type Database = {
           address?: string | null
           category_id?: string | null
           city_id?: string | null
+          commercial_document?: string | null
           cover_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -342,6 +344,7 @@ export type Database = {
           address?: string | null
           category_id?: string | null
           city_id?: string | null
+          commercial_document?: string | null
           cover_url?: string | null
           created_at?: string | null
           description?: string | null

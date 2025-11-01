@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Store, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
+import { AddStoreDialog } from "@/components/AddStoreDialog";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Merchant = () => {
   const { role: userRole, loading: roleLoading } = useUserRole();
   const [loading, setLoading] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  const [showAddStoreDialog, setShowAddStoreDialog] = useState(false);
   const [formData, setFormData] = useState({
     business_name: "",
     business_description: "",
@@ -204,7 +206,11 @@ const Merchant = () => {
               <Card className="p-8 border-2">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold">متاجرك</h3>
-                  <Button size="lg" className="shadow-glow">
+                  <Button 
+                    size="lg" 
+                    className="shadow-glow"
+                    onClick={() => setShowAddStoreDialog(true)}
+                  >
                     <Store className="w-4 h-4 ml-2" />
                     إضافة متجر جديد
                   </Button>
@@ -286,6 +292,19 @@ const Merchant = () => {
           </Card>
         </main>
         <Footer />
+        
+        {/* Add Store Dialog */}
+        <AddStoreDialog 
+          open={showAddStoreDialog}
+          onOpenChange={setShowAddStoreDialog}
+          onSuccess={() => {
+            // Reload stores or update state
+            toast({
+              title: "تم بنجاح",
+              description: "تم إضافة المتجر بنجاح"
+            });
+          }}
+        />
       </div>
     );
   }
