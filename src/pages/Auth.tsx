@@ -17,6 +17,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
@@ -97,6 +99,35 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "تم إرسال رابط إعادة التعيين!",
+        description: "تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+      });
+
+      setShowResetPassword(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: error.message || "حدث خطأ أثناء إرسال رابط إعادة التعيين",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -161,6 +192,17 @@ const Auth = () => {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
                   </Button>
+
+                  <div className="text-center mt-3">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm text-primary"
+                      onClick={() => setShowResetPassword(true)}
+                    >
+                      نسيت كلمة المرور؟
+                    </Button>
+                  </div>
                 </form>
               </TabsContent>
 
@@ -242,6 +284,51 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Reset Password Dialog */}
+        {showResetPassword && (
+          <Card className="border-2 shadow-glow mt-4 animate-fade-in">
+            <CardHeader>
+              <CardTitle className="text-xl text-center">إعادة تعيين كلمة المرور</CardTitle>
+              <CardDescription className="text-center">
+                أدخل بريدك الإلكتروني لإرسال رابط إعادة التعيين
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">البريد الإلكتروني</Label>
+                  <div className="relative">
+                    <Mail className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="example@email.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      className="pr-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1" disabled={loading}>
+                    {loading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowResetPassword(false)}
+                    disabled={loading}
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Admin Access - Hidden Link */}
         {isAdmin && (
