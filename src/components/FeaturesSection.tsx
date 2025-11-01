@@ -45,36 +45,39 @@ const additionalFeatures = [
 
 const FeaturesSection = () => {
   return (
-    <section className="py-20 gradient-hero">
-      <div className="container mx-auto px-4">
+    <section className="py-24 gradient-hero">
+      <div className="container mx-auto px-4 lg:px-6">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
               لماذا لا تشتتني؟
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             كل ما تحتاجه في مكان واحد - سهولة وسرعة ودقة في الوصول للمتاجر القريبة منك
           </p>
         </div>
 
         {/* Main Features */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="p-8 text-center hover:shadow-glow transition-smooth border-2 hover:border-primary/20 bg-card"
+              className="p-8 text-center hover:shadow-glow transition-smooth border-2 hover:border-primary/30 bg-card group cursor-pointer"
             >
-              <div className="mb-6 flex justify-center">
-                <img
-                  src={feature.icon}
-                  alt={feature.title}
-                  className="w-24 h-24 object-contain"
-                />
+              <div className="mb-8 flex justify-center">
+                <div className="relative">
+                  <img
+                    src={feature.icon}
+                    alt={feature.title}
+                    className="w-28 h-28 object-contain transition-smooth group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-smooth" />
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-smooth">{feature.title}</h3>
+              <p className="text-muted-foreground leading-relaxed text-lg">
                 {feature.description}
               </p>
             </Card>
@@ -82,20 +85,20 @@ const FeaturesSection = () => {
         </div>
 
         {/* Additional Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {additionalFeatures.map((feature, index) => {
             const Icon = feature.Icon;
             return (
               <div
                 key={index}
-                className="flex items-start gap-4 p-6 rounded-xl bg-card/50 backdrop-blur-sm border border-border hover:border-primary/30 transition-smooth"
+                className="flex items-start gap-5 p-7 rounded-2xl bg-card/60 backdrop-blur-sm border-2 border-border/50 hover:border-primary/40 transition-smooth group cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-6 h-6 text-primary-foreground" />
+                <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-smooth shadow-soft">
+                  <Icon className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-bold mb-1">{feature.title}</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-smooth">{feature.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>

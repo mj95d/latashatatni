@@ -5,7 +5,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
@@ -13,70 +13,70 @@ const HeroSection = () => {
           alt="أسواق محلية في السعودية"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/98 via-background/85 to-background/98" />
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
+      <div className="container mx-auto px-4 lg:px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-10">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 text-sm text-primary">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer">
             <Store className="w-4 h-4" />
-            <span className="font-medium">منصة محلية 100% سعودية</span>
+            <span className="font-semibold">منصة محلية 100% سعودية</span>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-            <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+            <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent drop-shadow-lg">
               لا تشتتني
             </span>
             <br />
-            <span className="text-foreground">كل ما تحتاجه قريب منك</span>
+            <span className="text-foreground text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
           </h1>
 
           {/* Description */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             اكتشف المتاجر المحلية والعروض الحصرية في منطقتك. منصة واحدة تجمع لك كل المتاجر والمنتجات القريبة منك بدون تشتت
           </p>
 
           {/* Search Box */}
-          <div className="bg-card rounded-2xl shadow-glow p-3 max-w-2xl mx-auto">
+          <div className="bg-card rounded-3xl shadow-glow p-4 max-w-3xl mx-auto border-2 border-border/50 hover:border-primary/30 transition-smooth">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="ابحث عن متجر أو منتج..."
-                  className="pr-12 h-12 text-base bg-background"
+                  className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl"
                 />
               </div>
               <div className="flex-1 relative">
-                <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="اختر موقعك أو مدينتك"
-                  className="pr-12 h-12 text-base bg-background"
+                  className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl"
                 />
               </div>
-              <Button variant="hero" size="lg" className="h-12 px-8">
+              <Button variant="hero" size="lg" className="h-14 px-10 text-base rounded-2xl shadow-glow hover:shadow-xl">
                 ابحث الآن
               </Button>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto pt-8">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary">500+</div>
-              <div className="text-sm text-muted-foreground">متجر محلي</div>
+          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
+            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/40 transition-smooth">
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">500+</div>
+              <div className="text-sm md:text-base text-muted-foreground mt-1">متجر محلي</div>
             </div>
-            <div className="text-center border-r border-l border-border">
-              <div className="text-2xl md:text-3xl font-bold text-secondary">1000+</div>
-              <div className="text-sm text-muted-foreground">منتج وعرض</div>
+            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-secondary/40 transition-smooth">
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent">1000+</div>
+              <div className="text-sm md:text-base text-muted-foreground mt-1">منتج وعرض</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary-glow">15</div>
-              <div className="text-sm text-muted-foreground">مدينة</div>
+            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary-glow/40 transition-smooth">
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent">15</div>
+              <div className="text-sm md:text-base text-muted-foreground mt-1">مدينة</div>
             </div>
           </div>
         </div>

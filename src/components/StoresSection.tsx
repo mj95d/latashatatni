@@ -48,50 +48,51 @@ const stores = [
 
 const StoresSection = () => {
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="py-24 bg-background">
+      <div className="container mx-auto px-4 lg:px-6">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex items-center justify-between mb-16">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              <span className="bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-3">
+              <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
                 متاجر قريبة منك
               </span>
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               اكتشف أفضل المتاجر المحلية في منطقتك
             </p>
           </div>
-          <Button variant="outline" className="hidden md:flex">
+          <Button variant="outline" className="hidden md:flex border-2 hover:border-primary/50 hover:text-primary">
             عرض الكل
           </Button>
         </div>
 
         {/* Stores Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {stores.map((store) => (
             <Card
               key={store.id}
-              className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/30"
+              className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40"
             >
               {/* Store Image */}
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-52 overflow-hidden">
                 <img
                   src={store.image}
                   alt={store.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-500"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
                 {store.offers > 0 && (
-                  <Badge className="absolute top-3 right-3 bg-secondary text-secondary-foreground font-bold">
+                  <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-sm px-3 py-1.5 shadow-lg">
                     {store.offers} عروض
                   </Badge>
                 )}
               </div>
 
               {/* Store Info */}
-              <div className="p-4 space-y-3">
+              <div className="p-5 space-y-4">
                 <div>
-                  <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-smooth">
+                  <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth">
                     {store.name}
                   </h3>
                   <p className="text-sm text-muted-foreground">
@@ -101,20 +102,20 @@ const StoresSection = () => {
 
                 {/* Rating & Distance */}
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg">
                     <Star className="w-4 h-4 fill-secondary text-secondary" />
-                    <span className="font-medium">{store.rating}</span>
+                    <span className="font-semibold text-foreground">{store.rating}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{store.distance}</span>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    <span className="font-medium">{store.distance}</span>
                   </div>
                 </div>
 
                 {/* Status */}
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm pt-2 border-t border-border/50">
                   <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-medium">{store.status}</span>
+                  <span className="text-primary font-semibold">{store.status}</span>
                 </div>
               </div>
             </Card>
@@ -122,8 +123,8 @@ const StoresSection = () => {
         </div>
 
         {/* Mobile View All Button */}
-        <div className="mt-8 text-center md:hidden">
-          <Button variant="outline" className="w-full max-w-sm">
+        <div className="mt-12 text-center md:hidden">
+          <Button variant="outline" className="w-full max-w-sm border-2 hover:border-primary/50">
             عرض جميع المتاجر
           </Button>
         </div>
