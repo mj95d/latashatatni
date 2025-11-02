@@ -31,6 +31,9 @@ import alSalamPark from "@/assets/tourism/al-salam-park.jpg";
 import alzulfiDam from "@/assets/tourism/alzulfi-dam.jpg";
 import alzulfiSouq from "@/assets/tourism/alzulfi-souq.jpg";
 import alzulfiMuseum from "@/assets/tourism/alzulfi-museum.jpg";
+import abhaJabalSouda from "@/assets/tourism/abha-jabal-souda.jpg";
+import abhaMuftahaVillage from "@/assets/tourism/abha-muftaha-village.jpg";
+import abhaAlsalamPark from "@/assets/tourism/abha-alsalam-park.jpg";
 
 interface TourismPlace {
   id: string;
@@ -58,17 +61,18 @@ const imageMap: Record<string, string> = {
   "نافورة الملك فهد": kingFahdFountain,
   "وادي حنيفة": wadiHanifah,
   "المسجد النبوي الشريف": prophetsMosque,
-  "جبل السودة": jabalSouda,
+  "جبل السودة": abhaJabalSouda,
   "قرية ذي عين الأثرية": zeeAin,
   "حديقة الملك عبدالله": kingAbdullahPark,
   "بوليفارد الرياض": boulevardRiyadh,
   "قلعة تبوك": tabukCastle,
   "سوق عكاظ": souqOkaz,
   "جبل أحد": mountUhud,
-  "منتزه السلام": alSalamPark,
+  "منتزه السلام": abhaAlsalamPark,
   "سد الزلفي": alzulfiDam,
   "سوق الزلفي التراثي": alzulfiSouq,
   "متحف الزلفي التراثي": alzulfiMuseum,
+  "قرية المفتاحة": abhaMuftahaVillage,
 };
 
 const categories = ["الكل", "معالم تاريخية", "معالم طبيعية", "جبال وطبيعة", "متاحف", "حدائق", "أسواق تراثية"];
