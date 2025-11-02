@@ -108,23 +108,23 @@ const HeroSection = () => {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
-            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
+            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-lg">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-2">
                 {stats.stores > 0 ? `+${stats.stores}` : '0'}
               </div>
-              <div className="text-sm md:text-base text-muted-foreground mt-1">متجر محلي</div>
+              <div className="text-base md:text-lg font-semibold text-foreground">متجر محلي</div>
             </div>
-            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-secondary/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent">
+            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-lg">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-2">
                 {stats.offers > 0 ? `+${stats.offers}` : '0'}
               </div>
-              <div className="text-sm md:text-base text-muted-foreground mt-1">منتج وعرض</div>
+              <div className="text-base md:text-lg font-semibold text-foreground">منتج وعرض</div>
             </div>
-            <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary-glow/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent">
+            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary-glow/50 transition-smooth shadow-lg">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent mb-2">
                 {stats.cities > 0 ? `+${stats.cities}` : '0'}
               </div>
-              <div className="text-sm md:text-base text-muted-foreground mt-1">مدينة</div>
+              <div className="text-base md:text-lg font-semibold text-foreground">مدينة</div>
             </div>
           </div>
         </div>
