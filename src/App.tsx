@@ -22,6 +22,8 @@ import Contact from "./pages/Contact";
 import Stats from "./pages/Stats";
 import NotFound from "./pages/NotFound";
 import SetupAdmin from "./pages/SetupAdmin";
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Subscribe from "./pages/merchant/Subscribe";
 import * as AdminPages from "./pages/admin";
@@ -45,6 +47,8 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/setup-admin" element={<SetupAdmin />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/merchant" element={<Merchant />} />

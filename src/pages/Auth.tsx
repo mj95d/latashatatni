@@ -317,14 +317,15 @@ const Auth = () => {
                   )}
 
                   <div className="text-center mt-3">
-                    <Button
-                      type="button"
-                      variant="link"
-                      className="text-sm text-primary"
-                      onClick={() => setShowResetPassword(true)}
-                    >
-                      نسيت كلمة المرور؟
-                    </Button>
+                    <Link to="/reset-password">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm text-primary"
+                      >
+                        نسيت كلمة المرور؟
+                      </Button>
+                    </Link>
                   </div>
                 </form>
               </TabsContent>
