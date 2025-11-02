@@ -21,6 +21,7 @@ import Contact from "./pages/Contact";
 import Stats from "./pages/Stats";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
+import Subscribe from "./pages/merchant/Subscribe";
 import * as AdminPages from "./pages/admin";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="stores" element={<AdminPages.Stores />} />
             <Route path="products" element={<AdminPages.Products />} />
             <Route path="offers" element={<AdminPages.Offers />} />
+            <Route path="subscriptions" element={<AdminPages.Subscriptions />} />
             <Route path="cities" element={<AdminPages.Cities />} />
             <Route path="payments" element={<AdminPages.Payments />} />
             <Route path="reports" element={<AdminPages.Reports />} />
@@ -60,6 +62,9 @@ const App = () => (
             <Route path="roles" element={<AdminPages.Roles />} />
             <Route path="settings" element={<AdminPages.AdminSettings />} />
           </Route>
+          
+          {/* Merchant Subscribe Route */}
+          <Route path="/merchant/subscribe" element={<Subscribe />} />
           
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />

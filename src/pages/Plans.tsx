@@ -134,8 +134,11 @@ const Plans = () => {
                     <Button 
                       variant={plan.popular ? "default" : "outline"} 
                       className="w-full border-2"
+                      asChild
                     >
-                      {plan.price === "مجاني" ? "البدء مجاناً" : "اشترك الآن"}
+                      <a href={plan.price === "مجاني" ? "/merchant" : `/merchant/subscribe?plan=${plan.name.toLowerCase()}`}>
+                        {plan.price === "مجاني" ? "البدء مجاناً" : "اشترك الآن"}
+                      </a>
                     </Button>
                   </CardContent>
                 </Card>

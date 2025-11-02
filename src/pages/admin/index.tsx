@@ -7,6 +7,7 @@ export { default as Roles } from "./Roles";
 export { default as Stores } from "./Stores";
 export { default as Products } from "./Products";
 export { default as Offers } from "./AdminOffers";
+export { default as Subscriptions } from "./Subscriptions";
 
 // Placeholder components - will be implemented later
 export const Cities = () => <div className="p-6"><h1 className="text-2xl font-bold">المدن والمواقع</h1><p className="text-muted-foreground mt-2">قريباً...</p></div>;

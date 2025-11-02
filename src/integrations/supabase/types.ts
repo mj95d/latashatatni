@@ -363,6 +363,9 @@ export type Database = {
           opening_hours: Json | null
           owner_id: string | null
           phone: string | null
+          plan: string | null
+          plan_expires_at: string | null
+          product_limit: number | null
           rating: number | null
           reviews_count: number | null
           updated_at: string | null
@@ -387,6 +390,9 @@ export type Database = {
           opening_hours?: Json | null
           owner_id?: string | null
           phone?: string | null
+          plan?: string | null
+          plan_expires_at?: string | null
+          product_limit?: number | null
           rating?: number | null
           reviews_count?: number | null
           updated_at?: string | null
@@ -411,6 +417,9 @@ export type Database = {
           opening_hours?: Json | null
           owner_id?: string | null
           phone?: string | null
+          plan?: string | null
+          plan_expires_at?: string | null
+          product_limit?: number | null
           rating?: number | null
           reviews_count?: number | null
           updated_at?: string | null
@@ -441,6 +450,62 @@ export type Database = {
           },
         ]
       }
+      subscription_requests: {
+        Row: {
+          created_at: string | null
+          duration: string
+          id: string
+          merchant_id: string | null
+          notes: string | null
+          payment_proof_url: string | null
+          plan: string
+          price: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          store_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration: string
+          id?: string
+          merchant_id?: string | null
+          notes?: string | null
+          payment_proof_url?: string | null
+          plan: string
+          price: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: string
+          id?: string
+          merchant_id?: string | null
+          notes?: string | null
+          payment_proof_url?: string | null
+          plan?: string
+          price?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string | null
@@ -450,6 +515,7 @@ export type Database = {
           plan_type: string
           start_date: string | null
           store_id: string | null
+          subscription_request_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -459,6 +525,7 @@ export type Database = {
           plan_type: string
           start_date?: string | null
           store_id?: string | null
+          subscription_request_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -468,6 +535,7 @@ export type Database = {
           plan_type?: string
           start_date?: string | null
           store_id?: string | null
+          subscription_request_id?: string | null
         }
         Relationships: [
           {
@@ -475,6 +543,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: true
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_subscription_request_id_fkey"
+            columns: ["subscription_request_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_requests"
             referencedColumns: ["id"]
           },
         ]
