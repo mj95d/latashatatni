@@ -137,10 +137,15 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-10 border-t-2 border-border/50 text-center">
-          <p className="text-base text-muted-foreground">
-            © 2025 <span className="font-semibold text-primary">لا تشتتني</span>. جميع الحقوق محفوظة.
-          </p>
+        <div className="pt-10 border-t-2 border-border/50">
+          <div className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 inline-block">
+              💡 <span className="font-semibold">ملاحظة:</span> الطلبات التجريبية المعلّمة كـ Demo تُستخدم لاختبار المنصة وتحسين التجربة قبل الإطلاق العام.
+            </p>
+            <p className="text-base text-muted-foreground">
+              © 2025 <span className="font-semibold text-primary">لا تشتتني</span>. جميع الحقوق محفوظة.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

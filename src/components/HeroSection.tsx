@@ -35,8 +35,10 @@ const HeroSection = () => {
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            اكتشف المتاجر المحلية والعروض الحصرية في منطقتك. منصة واحدة تجمع لك كل المتاجر والمنتجات القريبة منك بدون تشتت
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            سجّل مجانًا، وخلّ عروضك توصل للعملاء القريبين منك.
+            <br />
+            عمولتنا فقط <span className="text-primary font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو اشتراك شهري.
           </p>
 
           {/* Search Box */}

@@ -322,8 +322,16 @@ const Merchant = () => {
             انضم كتاجر
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            سجل متجرك وابدأ في عرض منتجاتك وعروضك للمستخدمين
+            افتح متجرك في أقل من دقيقتين. أضف عروضك اليوم وابدأ استقبال الطلبات فورًا.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+            <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm">
+              <span className="font-bold text-primary">✨ التسجيل مجاني</span>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-secondary/10 border-2 border-secondary/30 rounded-full px-5 py-2.5 text-sm">
+              <span className="font-bold text-secondary">💰 العمولة 1% فقط</span>
+            </div>
+          </div>
         </div>
 
         <div className="max-w-3xl mx-auto">
