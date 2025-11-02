@@ -11,6 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TourismMap from "@/components/TourismMap";
 
+// Import tourism images
+import masmakFort from "@/assets/tourism/masmak-fort.jpg";
+import jeddahCorniche from "@/assets/tourism/jeddah-corniche.jpg";
+import jabalShada from "@/assets/tourism/jabal-shada.jpg";
+import raghadanForest from "@/assets/tourism/raghadan-forest.jpg";
+import alBalad from "@/assets/tourism/al-balad.jpg";
+import kingFahdFountain from "@/assets/tourism/king-fahd-fountain.jpg";
+
 interface TourismPlace {
   id: string;
   name: string;
@@ -26,6 +34,16 @@ interface City {
   id: string;
   name: string;
 }
+
+// Image mapping for tourism places
+const imageMap: Record<string, string> = {
+  "قصر المصمك": masmakFort,
+  "كورنيش جدة": jeddahCorniche,
+  "جبل شدا الأعلى": jabalShada,
+  "غابة رغدان": raghadanForest,
+  "البلد التاريخي": alBalad,
+  "نافورة الملك فهد": kingFahdFountain,
+};
 
 const categories = ["الكل", "معالم تاريخية", "معالم طبيعية", "جبال وطبيعة", "متاحف", "حدائق", "أسواق تراثية"];
 
@@ -189,10 +207,19 @@ const Tourism = () => {
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {/* Image */}
-                    <div className="relative h-56 overflow-hidden bg-muted">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center">
-                        <Mountain className="w-16 h-16 text-white/30" />
-                      </div>
+                    <div className="relative h-56 overflow-hidden">
+                      {imageMap[place.name] ? (
+                        <img
+                          src={imageMap[place.name]}
+                          alt={place.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <Mountain className="w-16 h-16 text-white/30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                       
                       {/* Category Badge */}
                       {place.category && (
