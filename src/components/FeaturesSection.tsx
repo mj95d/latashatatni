@@ -76,8 +76,8 @@ const FeaturesSection = () => {
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-smooth" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-smooth">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed text-lg">
+              <h3 className="text-2xl font-bold mb-4 text-blue-500 group-hover:text-blue-400 transition-smooth">{feature.title}</h3>
+              <p className="text-blue-300/90 leading-relaxed text-lg">
                 {feature.description}
               </p>
             </Card>
@@ -97,8 +97,8 @@ const FeaturesSection = () => {
                   <Icon className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-smooth">{feature.title}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <h4 className="font-bold text-lg mb-2 text-blue-500 group-hover:text-blue-400 transition-smooth">{feature.title}</h4>
+                  <p className="text-sm text-blue-300/80 leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
