@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, MapPin, Image as ImageIcon, FileText } from "lucide-react";
+import MapPicker from "./MapPicker";
 
 interface AddStoreDialogProps {
   open: boolean;
@@ -31,8 +32,8 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
     address: "",
     phone: "",
     whatsapp: "",
-    latitude: "",
-    longitude: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
 
   // Load categories and cities when dialog opens
@@ -52,6 +53,10 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
   };
 
   const validateFile = (file: File, type: 'image' | 'document'): boolean => {
@@ -182,8 +187,8 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
           address: formData.address,
           phone: formData.phone,
           whatsapp: formData.whatsapp,
-          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           logo_url: logoUrl,
           commercial_document: documentUrl,
           is_active: false // سيتم تفعيله بعد مراجعة الأدمن
@@ -205,8 +210,8 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
         address: "",
         phone: "",
         whatsapp: "",
-        latitude: "",
-        longitude: "",
+        latitude: null,
+        longitude: null,
       });
       setLogoFile(null);
       setDocumentFile(null);
@@ -316,30 +321,19 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
             />
           </div>
 
-          {/* Location Coordinates */}
+          {/* Location Map Picker */}
           <div className="space-y-3">
             <Label className="text-base flex items-center gap-2">
               <MapPin className="w-4 h-4 text-primary" />
-              الموقع على خرائط جوجل (اختياري)
+              موقع المتجر على الخريطة *
             </Label>
-            <div className="grid md:grid-cols-2 gap-4">
-              <Input
-                placeholder="خط الطول (Longitude)"
-                value={formData.longitude}
-                onChange={(e) => handleInputChange("longitude", e.target.value)}
-                className="h-12"
-                dir="ltr"
-              />
-              <Input
-                placeholder="خط العرض (Latitude)"
-                value={formData.latitude}
-                onChange={(e) => handleInputChange("latitude", e.target.value)}
-                className="h-12"
-                dir="ltr"
-              />
-            </div>
+            <MapPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={handleLocationChange}
+            />
             <p className="text-sm text-muted-foreground">
-              يمكنك الحصول على الإحداثيات من خرائط جوجل بالنقر على الموقع واختيار "ما الموجود هنا؟"
+              انقر على الخريطة لتحديد موقع متجرك بدقة. سيظهر موقعك للعملاء على الخريطة.
             </p>
           </div>
 

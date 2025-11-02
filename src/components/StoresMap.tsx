@@ -63,7 +63,7 @@ export default function StoresMap({ stores }: StoresMapProps) {
           >
             <Popup>
               <div className="min-w-[200px] p-2">
-                <h3 className="font-bold text-lg mb-2">{store.name}</h3>
+                <h3 className="font-bold text-lg mb-3">{store.name}</h3>
                 
                 {store.address && (
                   <div className="flex items-start gap-2 mb-2 text-sm">
@@ -85,11 +85,21 @@ export default function StoresMap({ stores }: StoresMapProps) {
                 )}
                 
                 {store.rating && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 mb-3 text-sm">
                     <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                     <span className="font-medium">{store.rating.toFixed(1)}</span>
                   </div>
                 )}
+                
+                <a 
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors w-full justify-center font-medium"
+                >
+                  <MapPin className="h-4 w-4" />
+                  عرض المسار على Google Maps
+                </a>
               </div>
             </Popup>
           </Marker>

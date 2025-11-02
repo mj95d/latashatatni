@@ -414,10 +414,10 @@ const Stores = () => {
                           <Button 
                             variant="default" 
                             className="w-full"
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`, '_blank')}
+                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`, '_blank')}
                           >
                             <MapPin className="w-4 h-4 ml-1" />
-                            الموقع
+                            المسار
                           </Button>
                         )}
                         {store.phone && (
