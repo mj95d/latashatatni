@@ -10,6 +10,7 @@ import AdminNotifications from "./AdminNotifications";
 
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { isAdmin, isMerchant } = useUserRole();
 
@@ -100,10 +101,65 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <Button variant="ghost" size="icon" className="md:hidden hover:bg-primary/10">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden hover:bg-primary/10"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
             <Menu className="w-6 h-6" />
           </Button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-border/50 bg-card">
+            <div className="flex flex-col gap-2">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
+                  الرئيسية
+                </Button>
+              </Link>
+              <Link to="/stores" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
+                  المتاجر
+                </Button>
+              </Link>
+              <Link to="/offers" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
+                  العروض
+                </Button>
+              </Link>
+              <Link to="/cities" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
+                  المدن
+                </Button>
+              </Link>
+              {(isMerchant || isAdmin) && (
+                <Link to="/merchant" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full justify-start text-base border-2">
+                    <Store className="ml-1 h-4 w-4" />
+                    لوحة التاجر
+                  </Button>
+                </Link>
+              )}
+              {user ? (
+                <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="hero" size="sm" className="w-full justify-start mt-2">
+                    <User className="ml-1 h-4 w-4" />
+                    حسابي
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="hero" size="sm" className="w-full justify-start mt-2">
+                    تسجيل الدخول
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
