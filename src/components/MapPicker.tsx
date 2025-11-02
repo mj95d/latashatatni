@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
@@ -17,22 +17,57 @@ interface LocationPickerProps {
   onLocationChange: (lat: number, lng: number) => void;
 }
 
-function LocationSelector({ latitude, longitude, onLocationChange }: LocationPickerProps) {
-  useMapEvents({
-    click(e) {
-      onLocationChange(e.latlng.lat, e.latlng.lng);
-    },
-  });
-
-  return latitude && longitude ? (
-    <Marker position={[latitude, longitude]} />
-  ) : null;
-}
-
 export default function MapPicker({ latitude, longitude, onLocationChange }: LocationPickerProps) {
-  const center: [number, number] = latitude && longitude 
-    ? [latitude, longitude]
-    : [24.7136, 46.6753]; // Riyadh default
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    // Initialize map
+    const center: [number, number] = latitude && longitude 
+      ? [latitude, longitude]
+      : [24.7136, 46.6753]; // Riyadh default
+
+    const map = L.map('map-picker', {
+      center,
+      zoom: 12,
+      scrollWheelZoom: true
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Add click handler
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      onLocationChange(e.latlng.lat, e.latlng.lng);
+    });
+
+    mapRef.current = map;
+
+    // Cleanup
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update marker when location changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove old marker
+    if (markerRef.current) {
+      markerRef.current.remove();
+    }
+
+    // Add new marker if location exists
+    if (latitude && longitude) {
+      markerRef.current = L.marker([latitude, longitude]).addTo(mapRef.current);
+      mapRef.current.setView([latitude, longitude], 12);
+    }
+  }, [latitude, longitude]);
 
   return (
     <div className="space-y-3">
@@ -42,22 +77,7 @@ export default function MapPicker({ latitude, longitude, onLocationChange }: Loc
       </div>
       
       <div className="h-80 w-full rounded-lg overflow-hidden shadow-lg border-2 border-border">
-        <MapContainer
-          center={center}
-          zoom={12}
-          style={{ height: "100%", width: "100%" }}
-          scrollWheelZoom={true}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <LocationSelector 
-            latitude={latitude} 
-            longitude={longitude} 
-            onLocationChange={onLocationChange}
-          />
-        </MapContainer>
+        <div id="map-picker" style={{ height: '100%', width: '100%' }} />
       </div>
       
       {latitude && longitude && (
