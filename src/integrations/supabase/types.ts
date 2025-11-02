@@ -169,6 +169,59 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          channel: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          is_demo: boolean
+          items: Json
+          notes: string | null
+          status: string
+          store_id: string | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          is_demo?: boolean
+          items?: Json
+          notes?: string | null
+          status?: string
+          store_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          is_demo?: boolean
+          items?: Json
+          notes?: string | null
+          status?: string
+          store_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string | null
