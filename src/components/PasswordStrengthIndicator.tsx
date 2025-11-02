@@ -17,8 +17,16 @@ const commonPasswords = [
 export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements: PasswordRequirement[] = [
     {
-      label: "لا يقل عن 6 أحرف",
-      test: (pwd) => pwd.length >= 6
+      label: "لا يقل عن 8 أحرف",
+      test: (pwd) => pwd.length >= 8
+    },
+    {
+      label: "يحتوي على رقم واحد على الأقل",
+      test: (pwd) => /\d/.test(pwd)
+    },
+    {
+      label: "يحتوي على رمز خاص (!@#$%^&*)",
+      test: (pwd) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
     }
   ];
 
@@ -87,8 +95,16 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
 export const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (password.length < 6) {
+  if (password.length < 8) {
     errors.push('MIN_LENGTH');
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('NO_NUMBER');
+  }
+  
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('NO_SPECIAL_CHAR');
   }
 
   return {

@@ -63,7 +63,7 @@ const UpdatePassword = () => {
     if (!validation.valid) {
       toast({
         title: "خطأ",
-        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+        description: "كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على أرقام ورموز خاصة",
         variant: "destructive",
       });
       return;
@@ -134,7 +134,7 @@ const UpdatePassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={8}
                 />
                 <Button
                   type="button"
@@ -165,7 +165,7 @@ const UpdatePassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={8}
                 />
                 <Button
                   type="button"
