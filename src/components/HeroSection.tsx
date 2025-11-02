@@ -101,14 +101,14 @@ const HeroSection = () => {
               لا تشتتني
             </span>
             <br />
-            <span className="text-white text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
+            <span className="text-gray-400 text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
             سجّل مجانًا، وخلّ عروضك توصل للعملاء القريبين منك.
             <br />
-            عمولتنا فقط <span className="text-white font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
+            عمولتنا فقط <span className="text-blue-500 font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
             اشتراك شهري.
           </p>
 
