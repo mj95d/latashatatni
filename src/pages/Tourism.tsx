@@ -28,6 +28,9 @@ import tabukCastle from "@/assets/tourism/tabuk-castle.jpg";
 import souqOkaz from "@/assets/tourism/souq-okaz.jpg";
 import mountUhud from "@/assets/tourism/mount-uhud.jpg";
 import alSalamPark from "@/assets/tourism/al-salam-park.jpg";
+import alzulfiDam from "@/assets/tourism/alzulfi-dam.jpg";
+import alzulfiSouq from "@/assets/tourism/alzulfi-souq.jpg";
+import alzulfiMuseum from "@/assets/tourism/alzulfi-museum.jpg";
 
 interface TourismPlace {
   id: string;
@@ -63,6 +66,9 @@ const imageMap: Record<string, string> = {
   "سوق عكاظ": souqOkaz,
   "جبل أحد": mountUhud,
   "منتزه السلام": alSalamPark,
+  "سد الزلفي": alzulfiDam,
+  "سوق الزلفي التراثي": alzulfiSouq,
+  "متحف الزلفي التراثي": alzulfiMuseum,
 };
 
 const categories = ["الكل", "معالم تاريخية", "معالم طبيعية", "جبال وطبيعة", "متاحف", "حدائق", "أسواق تراثية"];
