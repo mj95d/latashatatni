@@ -71,7 +71,7 @@ const CallToAction = () => {
               size="xl"
               variant="outline"
               onClick={() => navigate("/plans")}
-              className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/15 text-lg px-12 hover:scale-105 transition-smooth"
+              className="border-2 border-orange-400 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:border-orange-500 text-lg px-12 hover:scale-105 transition-smooth"
             >
               تعرف على المزايا
             </Button>
