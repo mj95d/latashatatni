@@ -7,11 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, User, Phone, Shield, Store } from "lucide-react";
+import { Lock, Mail, User, Phone, Shield, Store, Fingerprint } from "lucide-react";
 import logo from "@/assets/logo-transparent.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordStrengthIndicator, validatePassword } from "@/components/PasswordStrengthIndicator";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -22,9 +23,11 @@ const Auth = () => {
   const [isMerchant, setIsMerchant] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
+  const { isAvailable, isEnrolled, enrollBiometric, authenticateWithBiometric } = useBiometricAuth();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -32,6 +35,13 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         navigate("/");
+      } else {
+        // Load saved email if remember me was enabled
+        const savedEmail = localStorage.getItem("saved_email");
+        if (savedEmail) {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        }
       }
     };
     checkUser();
@@ -102,6 +112,71 @@ const Auth = () => {
 
       if (error) throw error;
 
+      // Save email if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem("saved_email", email);
+      } else {
+        localStorage.removeItem("saved_email");
+      }
+
+      toast({
+        title: "تم تسجيل الدخول بنجاح!",
+        description: "مرحباً بعودتك",
+      });
+
+      // Save password for biometric login if enrolled
+      if (isEnrolled) {
+        localStorage.setItem(`biometric_pwd_${btoa(email)}`, btoa(password));
+      }
+
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في تسجيل الدخول",
+        description: error.message || "تحقق من البريد الإلكتروني وكلمة المرور",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricSignIn = async () => {
+    setLoading(true);
+    
+    try {
+      const email = await authenticateWithBiometric();
+      
+      if (!email) {
+        toast({
+          variant: "destructive",
+          title: "فشلت المصادقة",
+          description: "لم نتمكن من التحقق من هويتك",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Get saved password (in production, use a more secure method)
+      const savedPassword = localStorage.getItem(`biometric_pwd_${btoa(email)}`);
+      
+      if (!savedPassword) {
+        toast({
+          variant: "destructive",
+          title: "خطأ",
+          description: "يرجى تسجيل الدخول بكلمة المرور أولاً",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: atob(savedPassword),
+      });
+
+      if (error) throw error;
+
       toast({
         title: "تم تسجيل الدخول بنجاح!",
         description: "مرحباً بعودتك",
@@ -112,7 +187,7 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "خطأ في تسجيل الدخول",
-        description: error.message || "تحقق من البريد الإلكتروني وكلمة المرور",
+        description: error.message || "حدث خطأ أثناء تسجيل الدخول",
       });
     } finally {
       setLoading(false);
@@ -209,9 +284,37 @@ const Auth = () => {
                     </div>
                   </div>
 
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <Label
+                      htmlFor="remember-me"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      تذكرني
+                    </Label>
+                  </div>
+
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
                   </Button>
+
+                  {/* Biometric Login Button */}
+                  {isAvailable && isEnrolled && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={handleBiometricSignIn}
+                      disabled={loading}
+                    >
+                      <Fingerprint className="h-4 w-4" />
+                      تسجيل الدخول بالبصمة/الوجه
+                    </Button>
+                  )}
 
                   <div className="text-center mt-3">
                     <Button
