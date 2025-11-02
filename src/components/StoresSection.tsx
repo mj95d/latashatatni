@@ -136,6 +136,7 @@ const StoresSection = () => {
       fetchStores();
     }
   }, [userLocation, sortByDistance]);
+
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-4 lg:px-6">
