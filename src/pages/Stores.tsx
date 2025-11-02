@@ -48,6 +48,8 @@ const Stores = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortByDistance, setSortByDistance] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,12 +103,75 @@ const Stores = () => {
     }
   };
 
+  const getUserLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setSortByDistance(true);
+          toast({
+            title: "تم تحديد موقعك",
+            description: "سيتم عرض المتاجر القريبة منك أولاً",
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast({
+            title: "تعذر تحديد الموقع",
+            description: "يرجى السماح بالوصول إلى موقعك لاستخدام هذه الميزة",
+            variant: "destructive",
+          });
+        }
+      );
+    } else {
+      toast({
+        title: "الموقع غير مدعوم",
+        description: "متصفحك لا يدعم خاصية تحديد الموقع",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  };
+
   const filteredStores = stores.filter(store => {
     const cityMatch = selectedCity === "الكل" || store.cities?.name === selectedCity;
     const categoryMatch = selectedCategory === "الكل" || store.categories?.name === selectedCategory;
     const searchMatch = store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        (store.description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
     return cityMatch && categoryMatch && searchMatch;
+  }).map(store => {
+    if (userLocation && store.latitude && store.longitude && sortByDistance) {
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        store.latitude,
+        store.longitude
+      );
+      return { ...store, distance };
+    }
+    return { ...store, distance: undefined };
+  }).sort((a, b) => {
+    if (sortByDistance && a.distance !== undefined && b.distance !== undefined) {
+      return a.distance - b.distance;
+    }
+    return 0;
   });
 
   return (
@@ -171,14 +236,44 @@ const Stores = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={sortByDistance ? "default" : "outline"}
+                  className="gap-2 border-2"
+                  onClick={getUserLocation}
+                >
+                  <MapPin className="w-4 h-4" />
+                  المتاجر القريبة
+                </Button>
+                {sortByDistance && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSortByDistance(false);
+                      setUserLocation(null);
+                    }}
+                  >
+                    إلغاء الفرز
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Results Count & View Toggle */}
           <div className="mb-6 flex items-center justify-between">
-            <p className="text-muted-foreground">
-              عرض <span className="font-bold text-primary">{filteredStores.length}</span> متجر
-            </p>
+            <div>
+              <p className="text-muted-foreground">
+                عرض <span className="font-bold text-primary">{filteredStores.length}</span> متجر
+              </p>
+              {sortByDistance && userLocation && (
+                <p className="text-xs text-primary mt-1">
+                  مرتبة حسب القرب من موقعك
+                </p>
+              )}
+            </div>
             
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "map")} className="w-auto">
               <TabsList>
@@ -230,6 +325,14 @@ const Stores = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center">
                         <Store className="w-16 h-16 text-white/30" />
                       </div>
+                      
+                      {/* Distance Badge */}
+                      {(store as any).distance !== undefined && (
+                        <Badge className="absolute top-4 right-4 bg-secondary/90 text-secondary-foreground font-semibold px-3 py-1.5">
+                          <MapPin className="w-3 h-3 ml-1" />
+                          {(store as any).distance.toFixed(1)} كم
+                        </Badge>
+                      )}
                       
                       {/* City Badge */}
                       {store.cities?.name && (
