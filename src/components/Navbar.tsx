@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, User, Store } from "lucide-react";
+import { Search, Menu, User, Store, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo-transparent.png";
@@ -83,7 +83,17 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
-            {isAdmin && <AdminNotifications />}
+            {isAdmin && (
+              <>
+                <Link to="/admin/dashboard">
+                  <Button variant="default" size="sm" className="text-base bg-gradient-to-l from-primary to-primary-glow">
+                    <Shield className="ml-1 h-4 w-4" />
+                    لوحة الأدمن
+                  </Button>
+                </Link>
+                <AdminNotifications />
+              </>
+            )}
             {user ? (
               <Link to="/profile">
                 <Button variant="hero" size="sm" className="mr-2">
@@ -140,6 +150,14 @@ const Navbar = () => {
                   <Button variant="outline" size="sm" className="w-full justify-start text-base border-2">
                     <Store className="ml-1 h-4 w-4" />
                     لوحة التاجر
+                  </Button>
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="default" size="sm" className="w-full justify-start text-base bg-gradient-to-l from-primary to-primary-glow">
+                    <Shield className="ml-1 h-4 w-4" />
+                    لوحة الأدمن
                   </Button>
                 </Link>
               )}
