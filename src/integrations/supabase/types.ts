@@ -242,6 +242,7 @@ export type Database = {
           end_date: string | null
           id: string
           image_url: string | null
+          images: Json | null
           is_active: boolean | null
           start_date: string | null
           store_id: string | null
@@ -256,6 +257,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           image_url?: string | null
+          images?: Json | null
           is_active?: boolean | null
           start_date?: string | null
           store_id?: string | null
@@ -270,6 +272,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           image_url?: string | null
+          images?: Json | null
           is_active?: boolean | null
           start_date?: string | null
           store_id?: string | null

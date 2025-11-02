@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
 import { SubscriptionAlert } from "@/components/SubscriptionAlert";
+import { AddOfferDialog } from "@/components/AddOfferDialog";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -22,6 +23,10 @@ const Merchant = () => {
   const [loading, setLoading] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [showAddStoreDialog, setShowAddStoreDialog] = useState(false);
+  const [showAddOfferDialog, setShowAddOfferDialog] = useState(false);
+  const [stores, setStores] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const [formData, setFormData] = useState({
     business_name: "",
     business_description: "",
@@ -31,7 +36,53 @@ const Merchant = () => {
 
   useEffect(() => {
     checkMerchantRequest();
-  }, []);
+    if (userRole === 'merchant') {
+      fetchStores();
+      fetchOffers();
+    }
+  }, [userRole]);
+
+  const fetchStores = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("stores")
+        .select("*")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setStores(data || []);
+      if (data && data.length > 0 && !selectedStoreId) {
+        setSelectedStoreId(data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+    }
+  };
+
+  const fetchOffers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("offers")
+        .select(`
+          *,
+          stores!inner(owner_id)
+        `)
+        .eq("stores.owner_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setOffers(data || []);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+    }
+  };
 
   const checkMerchantRequest = async () => {
     try {
@@ -236,21 +287,73 @@ const Merchant = () => {
               <Card className="p-8 border-2">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold">عروضك</h3>
-                  <Button size="lg" className="shadow-glow">
+                  <Button 
+                    size="lg" 
+                    className="shadow-glow"
+                    onClick={() => {
+                      if (stores.length === 0) {
+                        toast({
+                          title: "تنبيه",
+                          description: "يجب إضافة متجر أولاً قبل إضافة عروض",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      setShowAddOfferDialog(true);
+                    }}
+                  >
                     <CheckCircle className="w-4 h-4 ml-2" />
                     إضافة عرض جديد
                   </Button>
                 </div>
-                <div className="text-center py-16">
-                  <CheckCircle className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
-                  <h4 className="text-xl font-semibold mb-3">لا توجد عروض حالياً</h4>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    أضف عروضك الحصرية واجذب المزيد من العملاء
-                  </p>
-                  <Button onClick={() => navigate("/offers")} variant="outline" size="lg">
-                    تصفح العروض
-                  </Button>
-                </div>
+                
+                {offers.length === 0 ? (
+                  <div className="text-center py-16">
+                    <CheckCircle className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
+                    <h4 className="text-xl font-semibold mb-3">لا توجد عروض حالياً</h4>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      أضف عروضك الحصرية واجذب المزيد من العملاء
+                    </p>
+                    <Button onClick={() => navigate("/offers")} variant="outline" size="lg">
+                      تصفح العروض
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {offers.map((offer) => (
+                      <Card key={offer.id} className="overflow-hidden">
+                        <div className="relative h-48">
+                          <img
+                            src={
+                              (offer.images && offer.images.length > 0 
+                                ? offer.images.find((img: any) => img.is_primary)?.url || offer.images[0].url
+                                : offer.image_url) || 
+                              'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop'
+                            }
+                            alt={offer.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-lg mb-2 line-clamp-1">{offer.title}</h4>
+                          {offer.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                              {offer.description}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className={offer.is_active ? "text-green-600" : "text-red-600"}>
+                              {offer.is_active ? "نشط" : "غير نشط"}
+                            </span>
+                            {offer.end_date && (
+                              <span>ينتهي: {new Date(offer.end_date).toLocaleDateString('ar-SA')}</span>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </Card>
             </TabsContent>
 
@@ -477,6 +580,19 @@ const Merchant = () => {
       </main>
 
       <Footer />
+      
+      <AddOfferDialog
+        open={showAddOfferDialog}
+        onOpenChange={setShowAddOfferDialog}
+        storeId={selectedStoreId}
+        onSuccess={() => {
+          fetchOffers();
+          toast({
+            title: "تم بنجاح",
+            description: "تم إضافة العرض بنجاح",
+          });
+        }}
+      />
     </div>
   );
 };

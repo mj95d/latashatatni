@@ -8,6 +8,7 @@ import { MapPin, Star, Clock, Tag, Percent } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { OfferDetailsDialog } from "@/components/OfferDetailsDialog";
 
 interface Offer {
   id: string;
@@ -16,12 +17,16 @@ interface Offer {
   discount_text: string | null;
   discount_percentage: number | null;
   image_url: string | null;
+  images: Array<{ url: string; is_primary?: boolean }> | null;
   start_date: string;
   end_date: string | null;
   is_active: boolean;
   store_id: string | null;
   stores: {
     name: string;
+    address: string | null;
+    phone: string | null;
+    whatsapp: string | null;
     city_id: string | null;
     rating: number | null;
     cities: {
@@ -40,6 +45,8 @@ const Offers = () => {
   const [cities, setCities] = useState<string[]>(["الكل"]);
   const [categories, setCategories] = useState<string[]>(["الكل"]);
   const [loading, setLoading] = useState(true);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,6 +63,9 @@ const Offers = () => {
           *,
           stores (
             name,
+            address,
+            phone,
+            whatsapp,
             rating,
             city_id,
             category_id,
@@ -71,7 +81,7 @@ const Offers = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setOffers(data || []);
+      setOffers((data || []) as unknown as Offer[]);
     } catch (error) {
       console.error("Error fetching offers:", error);
       toast({
@@ -190,8 +200,12 @@ const Offers = () => {
             {filteredOffers.map((offer, index) => {
               const discount = offer.discount_text || 
                 (offer.discount_percentage ? `${offer.discount_percentage}%` : 'عرض خاص');
-              const imageUrl = offer.image_url || 
-                'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+              
+              // استخدام أول صورة من مصفوفة الصور أو الصورة القديمة
+              const primaryImage = offer.images && offer.images.length > 0
+                ? offer.images.find(img => img.is_primary)?.url || offer.images[0].url
+                : offer.image_url;
+              const imageUrl = primaryImage || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
               const cityName = offer.stores?.cities?.name || 'غير محدد';
               const categoryName = offer.stores?.categories?.name || 'عام';
               const rating = offer.stores?.rating || 0;
@@ -267,7 +281,14 @@ const Offers = () => {
                     )}
 
                     {/* Action Button */}
-                    <Button className="w-full mt-2" variant="default">
+                    <Button 
+                      className="w-full mt-2" 
+                      variant="default"
+                      onClick={() => {
+                        setSelectedOffer(offer);
+                        setDetailsOpen(true);
+                      }}
+                    >
                       عرض التفاصيل
                     </Button>
                   </div>
@@ -288,6 +309,12 @@ const Offers = () => {
       </main>
 
       <Footer />
+      
+      <OfferDetailsDialog
+        offer={selectedOffer}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   );
 };
