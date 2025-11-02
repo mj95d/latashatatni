@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -6,94 +6,131 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Star, Clock, Tag, Percent } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const offers = [
-  {
-    id: 1,
-    title: "خصم 50% على جميع العطور الفرنسية",
-    storeName: "متجر النخبة للعطور",
-    category: "عطور ومستحضرات",
-    discount: "50%",
-    city: "الزلفي",
-    endDate: "2025-11-15",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800&h=600&fit=crop",
-    rating: 4.8,
-    distance: "0.5 كم"
-  },
-  {
-    id: 2,
-    title: "وجبة مجانية عند طلب وجبتين",
-    storeName: "مطعم الذواقة",
-    category: "مطاعم",
-    discount: "1+1",
-    city: "الرياض",
-    endDate: "2025-11-20",
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop",
-    rating: 4.6,
-    distance: "1.2 كم"
-  },
-  {
-    id: 3,
-    title: "تخفيضات الموسم - حتى 70%",
-    storeName: "بوتيك الأناقة",
-    category: "ملابس",
-    discount: "70%",
-    city: "جدة",
-    endDate: "2025-11-30",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop",
-    rating: 4.9,
-    distance: "0.8 كم"
-  },
-  {
-    id: 4,
-    title: "اشتر 3 كتب واحصل على الرابع مجاناً",
-    storeName: "مكتبة المعرفة",
-    category: "كتب وقرطاسية",
-    discount: "3+1",
-    city: "الدمام",
-    endDate: "2025-11-25",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&h=600&fit=crop",
-    rating: 4.7,
-    distance: "2.0 كم"
-  },
-  {
-    id: 5,
-    title: "خصم 30% على الأجهزة الإلكترونية",
-    storeName: "متجر التقنية الحديثة",
-    category: "إلكترونيات",
-    discount: "30%",
-    city: "الزلفي",
-    endDate: "2025-11-18",
-    image: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800&h=600&fit=crop",
-    rating: 4.5,
-    distance: "1.5 كم"
-  },
-  {
-    id: 6,
-    title: "عرض خاص: قهوة + حلى بـ 25 ريال",
-    storeName: "كافيه المذاق",
-    category: "مطاعم ومقاهي",
-    discount: "خاص",
-    city: "القصيم",
-    endDate: "2025-11-22",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=600&fit=crop",
-    rating: 4.4,
-    distance: "3.0 كم"
-  }
-];
-
-const cities = ["الكل", "الزلفي", "الرياض", "جدة", "الدمام", "القصيم", "الباحة"];
-const categories = ["الكل", "عطور ومستحضرات", "مطاعم", "ملابس", "كتب وقرطاسية", "إلكترونيات", "مطاعم ومقاهي"];
+interface Offer {
+  id: string;
+  title: string;
+  description: string | null;
+  discount_text: string | null;
+  discount_percentage: number | null;
+  image_url: string | null;
+  start_date: string;
+  end_date: string | null;
+  is_active: boolean;
+  store_id: string | null;
+  stores: {
+    name: string;
+    city_id: string | null;
+    rating: number | null;
+    cities: {
+      name: string;
+    } | null;
+    categories: {
+      name: string;
+    } | null;
+  } | null;
+}
 
 const Offers = () => {
   const [selectedCity, setSelectedCity] = useState("الكل");
   const [selectedCategory, setSelectedCategory] = useState("الكل");
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [cities, setCities] = useState<string[]>(["الكل"]);
+  const [categories, setCategories] = useState<string[]>(["الكل"]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchOffers();
+    fetchCities();
+    fetchCategories();
+  }, []);
+
+  const fetchOffers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("offers")
+        .select(`
+          *,
+          stores (
+            name,
+            rating,
+            city_id,
+            category_id,
+            cities (
+              name
+            ),
+            categories (
+              name
+            )
+          )
+        `)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setOffers(data || []);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في تحميل العروض",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cities")
+        .select("name")
+        .order("name");
+
+      if (error) throw error;
+      setCities(["الكل", ...(data?.map(c => c.name) || [])]);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("name")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(["الكل", ...(data?.map(c => c.name) || [])]);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const filteredOffers = offers.filter(offer => {
-    const cityMatch = selectedCity === "الكل" || offer.city === selectedCity;
-    const categoryMatch = selectedCategory === "الكل" || offer.category === selectedCategory;
+    const cityMatch = selectedCity === "الكل" || offer.stores?.cities?.name === selectedCity;
+    const categoryMatch = selectedCategory === "الكل" || offer.stores?.categories?.name === selectedCategory;
     return cityMatch && categoryMatch;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-32 pb-20">
+          <div className="container mx-auto px-4 lg:px-6 text-center">
+            <div className="animate-pulse">جاري التحميل...</div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -150,75 +187,93 @@ const Offers = () => {
 
           {/* Offers Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredOffers.map((offer, index) => (
-              <Card
-                key={offer.id}
-                className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40 animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Image */}
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={offer.image}
-                    alt={offer.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  
-                  {/* Discount Badge */}
-                  <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-lg px-4 py-2 shadow-lg">
-                    <Tag className="w-4 h-4 ml-1" />
-                    {offer.discount}
-                  </Badge>
+            {filteredOffers.map((offer, index) => {
+              const discount = offer.discount_text || 
+                (offer.discount_percentage ? `${offer.discount_percentage}%` : 'عرض خاص');
+              const imageUrl = offer.image_url || 
+                'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+              const cityName = offer.stores?.cities?.name || 'غير محدد';
+              const categoryName = offer.stores?.categories?.name || 'عام';
+              const rating = offer.stores?.rating || 0;
+              const storeName = offer.stores?.name || 'متجر';
+              const endDate = offer.end_date ? new Date(offer.end_date) : null;
+              const isExpired = endDate && endDate < new Date();
 
-                  {/* City Badge */}
-                  <Badge className="absolute top-4 left-4 bg-primary/90 text-primary-foreground font-semibold px-3 py-1.5">
-                    <MapPin className="w-3 h-3 ml-1" />
-                    {offer.city}
-                  </Badge>
-                </div>
+              if (isExpired) return null;
 
-                {/* Content */}
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth line-clamp-2">
-                      {offer.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground font-semibold">
-                      {offer.storeName}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {offer.category}
-                    </p>
+              return (
+                <Card
+                  key={offer.id}
+                  className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40 animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Image */}
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={imageUrl}
+                      alt={offer.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    
+                    {/* Discount Badge */}
+                    <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-lg px-4 py-2 shadow-lg">
+                      <Tag className="w-4 h-4 ml-1" />
+                      {discount}
+                    </Badge>
+
+                    {/* City Badge */}
+                    <Badge className="absolute top-4 left-4 bg-primary/90 text-primary-foreground font-semibold px-3 py-1.5">
+                      <MapPin className="w-3 h-3 ml-1" />
+                      {cityName}
+                    </Badge>
                   </div>
 
-                  {/* Rating & Distance */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg">
-                      <Star className="w-4 h-4 fill-secondary text-secondary" />
-                      <span className="font-semibold text-foreground">{offer.rating}</span>
+                  {/* Content */}
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth line-clamp-2">
+                        {offer.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-semibold">
+                        {storeName}
+                      </p>
+                      {offer.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {offer.description}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {categoryName}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span className="font-medium">{offer.distance}</span>
-                    </div>
-                  </div>
 
-                  {/* End Date */}
-                  <div className="flex items-center gap-2 text-sm pt-2 border-t border-border/50">
-                    <Clock className="w-4 h-4 text-secondary" />
-                    <span className="text-secondary font-semibold">
-                      ينتهي في: {new Date(offer.endDate).toLocaleDateString('ar-SA')}
-                    </span>
-                  </div>
+                    {/* Rating */}
+                    {rating > 0 && (
+                      <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg w-fit">
+                        <Star className="w-4 h-4 fill-secondary text-secondary" />
+                        <span className="font-semibold text-foreground">{rating.toFixed(1)}</span>
+                      </div>
+                    )}
 
-                  {/* Action Button */}
-                  <Button className="w-full mt-2" variant="default">
-                    عرض التفاصيل
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                    {/* End Date */}
+                    {endDate && (
+                      <div className="flex items-center gap-2 text-sm pt-2 border-t border-border/50">
+                        <Clock className="w-4 h-4 text-secondary" />
+                        <span className="text-secondary font-semibold">
+                          ينتهي في: {endDate.toLocaleDateString('ar-SA')}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Action Button */}
+                    <Button className="w-full mt-2" variant="default">
+                      عرض التفاصيل
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
 
           {/* No Results */}
