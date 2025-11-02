@@ -1,7 +1,7 @@
 import { MapPin, Search, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/hero-bg-new.jpg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -65,14 +65,14 @@ const HeroSection = () => {
               لا تشتتني
             </span>
             <br />
-            <span className="text-foreground text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
+            <span className="text-white text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto leading-relaxed">
             سجّل مجانًا، وخلّ عروضك توصل للعملاء القريبين منك.
             <br />
-            عمولتنا فقط <span className="text-primary font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
+            عمولتنا فقط <span className="text-white font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
             اشتراك شهري.
           </p>
 
