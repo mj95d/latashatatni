@@ -13,6 +13,7 @@ export { default as Cities } from "./Cities";
 export { default as Reports } from "./Reports";
 export { default as Logs } from "./Logs";
 
+export { default as Settings } from "./Settings";
+
 // Placeholder components - will be implemented later
 export const Payments = () => <div className="p-6"><h1 className="text-2xl font-bold">الاشتراكات والمدفوعات</h1><p className="text-muted-foreground mt-2">قريباً...</p></div>;
-export const AdminSettings = () => <div className="p-6"><h1 className="text-2xl font-bold">الإعدادات</h1><p className="text-muted-foreground mt-2">قريباً...</p></div>;

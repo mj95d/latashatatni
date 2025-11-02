@@ -69,7 +69,7 @@ const App = () => (
             <Route path="logs" element={<AdminPages.Logs />} />
             <Route path="roles" element={<AdminPages.Roles />} />
             <Route path="create-admins" element={<AdminPages.CreateAdmins />} />
-            <Route path="settings" element={<AdminPages.AdminSettings />} />
+            <Route path="settings" element={<AdminPages.Settings />} />
           </Route>
           
           {/* Merchant Subscribe Route */}

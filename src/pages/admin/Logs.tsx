@@ -26,18 +26,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollText, Search, Filter, Download, Loader2, Calendar } from "lucide-react";
+import { ScrollText, Search, Filter, Download, Loader2, Calendar, RefreshCw } from "lucide-react";
 
 interface LogEntry {
   id: string;
   action: string;
-  user_email: string;
-  user_name: string;
+  user_email: string | null;
+  user_name: string | null;
   table_name: string;
-  record_id: string;
-  changes: any;
+  record_id: string | null;
+  old_data: any;
+  new_data: any;
   timestamp: string;
-  ip_address?: string;
+  ip_address?: string | null;
 }
 
 const Logs = () => {
@@ -61,61 +62,33 @@ const Logs = () => {
     try {
       setLoading(true);
 
-      // في الوقت الحالي، سنعرض سجلات وهمية
-      // يمكن لاحقاً إضافة جدول audit_logs في قاعدة البيانات
-      const mockLogs: LogEntry[] = [
-        {
-          id: "1",
-          action: "CREATE",
-          user_email: "admin@example.com",
-          user_name: "المشرف الرئيسي",
-          table_name: "stores",
-          record_id: "store-123",
-          changes: { name: "متجر جديد", city: "الرياض" },
-          timestamp: new Date().toISOString(),
-          ip_address: "192.168.1.1",
-        },
-        {
-          id: "2",
-          action: "UPDATE",
-          user_email: "merchant@example.com",
-          user_name: "تاجر النجاح",
-          table_name: "offers",
-          record_id: "offer-456",
-          changes: { discount_percentage: 20 },
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          ip_address: "192.168.1.2",
-        },
-        {
-          id: "3",
-          action: "DELETE",
-          user_email: "admin@example.com",
-          user_name: "المشرف الرئيسي",
-          table_name: "users",
-          record_id: "user-789",
-          changes: null,
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          ip_address: "192.168.1.1",
-        },
-        {
-          id: "4",
-          action: "CREATE",
-          user_email: "user@example.com",
-          user_name: "مستخدم عادي",
-          table_name: "orders",
-          record_id: "order-321",
-          changes: { total_amount: 500, status: "NEW" },
-          timestamp: new Date(Date.now() - 86400000).toISOString(),
-          ip_address: "192.168.1.3",
-        },
-      ];
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(1000);
 
-      setLogs(mockLogs);
-      setFilteredLogs(mockLogs);
+      if (error) throw error;
+
+      const formattedLogs: LogEntry[] = (data || []).map((log) => ({
+        id: log.id,
+        action: log.action,
+        user_email: log.user_email,
+        user_name: log.user_name,
+        table_name: log.table_name,
+        record_id: log.record_id,
+        old_data: log.old_data,
+        new_data: log.new_data,
+        timestamp: log.timestamp,
+        ip_address: log.ip_address,
+      }));
+
+      setLogs(formattedLogs);
+      setFilteredLogs(formattedLogs);
     } catch (error: any) {
       toast({
         title: "خطأ",
-        description: "فشل تحميل السجلات",
+        description: "فشل تحميل السجلات: " + error.message,
         variant: "destructive",
       });
     } finally {
@@ -189,9 +162,28 @@ const Logs = () => {
   };
 
   const exportLogs = () => {
+    const csvContent = [
+      ["التاريخ", "العملية", "المستخدم", "الجدول", "معرف السجل"],
+      ...filteredLogs.map((log) => [
+        formatTimestamp(log.timestamp),
+        log.action,
+        `${log.user_name || "-"} (${log.user_email || "-"})`,
+        log.table_name,
+        log.record_id || "-",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `logs_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+
     toast({
-      title: "قريباً",
-      description: "ميزة تصدير السجلات ستكون متاحة قريباً",
+      title: "تم التصدير",
+      description: "تم تصدير السجلات بنجاح",
     });
   };
 
@@ -209,14 +201,20 @@ const Logs = () => {
         <div>
           <h2 className="text-3xl font-bold">سجلات النظام</h2>
           <p className="text-muted-foreground mt-1">
-            سجل شامل لجميع العمليات والأنشطة في النظام
+            سجل شامل لجميع العمليات والأنشطة في النظام ({filteredLogs.length} سجل)
           </p>
         </div>
 
-        <Button onClick={exportLogs} className="gap-2">
-          <Download className="h-4 w-4" />
-          تصدير السجلات
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchLogs} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            تحديث
+          </Button>
+          <Button onClick={exportLogs} className="gap-2">
+            <Download className="h-4 w-4" />
+            تصدير
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -318,10 +316,20 @@ const Logs = () => {
                       {log.ip_address || "-"}
                     </TableCell>
                     <TableCell>
-                      {log.changes ? (
-                        <code className="text-xs bg-muted px-2 py-1 rounded block max-w-xs truncate">
-                          {JSON.stringify(log.changes)}
-                        </code>
+                      {log.new_data ? (
+                        <details className="cursor-pointer">
+                          <summary className="text-xs text-primary">عرض التفاصيل</summary>
+                          <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 max-w-md overflow-auto">
+                            {JSON.stringify(log.new_data, null, 2)}
+                          </code>
+                        </details>
+                      ) : log.old_data ? (
+                        <details className="cursor-pointer">
+                          <summary className="text-xs text-destructive">بيانات محذوفة</summary>
+                          <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 max-w-md overflow-auto">
+                            {JSON.stringify(log.old_data, null, 2)}
+                          </code>
+                        </details>
                       ) : (
                         "-"
                       )}
@@ -334,15 +342,18 @@ const Logs = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-muted/50">
+      <Card className="bg-primary/5 border-primary/20">
         <CardContent className="pt-6">
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium mb-2">ملاحظة:</p>
-            <p>
-              هذه النسخة التجريبية من السجلات. لتفعيل التسجيل الكامل، يجب إضافة
-              جدول audit_logs في قاعدة البيانات مع triggers لتسجيل جميع العمليات
-              تلقائياً.
+          <div className="text-sm">
+            <p className="font-medium mb-2 flex items-center gap-2">
+              <ScrollText className="h-4 w-4 text-primary" />
+              معلومات السجلات:
             </p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>يتم تسجيل جميع العمليات تلقائياً في قاعدة البيانات</li>
+              <li>السجلات مرتبطة بالجداول: المتاجر، العروض، الأدوار، الاشتراكات</li>
+              <li>يمكن تصدير السجلات بصيغة CSV للمراجعة والتحليل</li>
+            </ul>
           </div>
         </CardContent>
       </Card>
