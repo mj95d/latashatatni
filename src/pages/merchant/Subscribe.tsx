@@ -220,51 +220,51 @@ export default function Subscribe() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" dir="rtl">
+    <div className="min-h-screen flex flex-col bg-background" dir="rtl">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 py-8 pt-24 max-w-6xl">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">إكمال عملية الاشتراك</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">إكمال عملية الاشتراك</h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             شكرًا لاختيارك باقة {plan.name}. لإكمال الاشتراك يرجى سداد رسوم الاشتراك ثم رفع إيصال الدفع
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Plan Summary */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Building2 className="w-8 h-8 text-primary" />
+          <Card className="p-4 md:p-6 h-fit">
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 className="w-6 h-6 md:w-8 md:h-8 text-primary" />
               <div>
-                <h2 className="text-xl font-bold">{plan.name}</h2>
-                <p className="text-sm text-muted-foreground">ملخص الباقة</p>
+                <h2 className="text-lg md:text-xl font-bold">{plan.name}</h2>
+                <p className="text-xs md:text-sm text-muted-foreground">ملخص الباقة</p>
               </div>
             </div>
 
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 mb-4">
               {plan.features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
-                  <span className="text-sm">{feature}</span>
+                <div key={index} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-xs md:text-sm">{feature}</span>
                 </div>
               ))}
             </div>
 
             <div className="border-t pt-4">
               <div className="mb-4">
-                <Label className="mb-3 block">اختر مدة الاشتراك</Label>
-                <RadioGroup value={selectedDuration} onValueChange={setSelectedDuration}>
+                <Label className="mb-3 block text-sm md:text-base">اختر مدة الاشتراك</Label>
+                <RadioGroup value={selectedDuration} onValueChange={setSelectedDuration} className="space-y-2">
                   {DURATIONS.map((duration) => (
-                    <div key={duration.value} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div key={duration.value} className="flex items-center justify-between p-2 md:p-3 border rounded-lg hover:border-primary/50 transition-colors">
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value={duration.value} id={duration.value} />
-                        <Label htmlFor={duration.value} className="cursor-pointer">
+                        <Label htmlFor={duration.value} className="cursor-pointer text-sm md:text-base">
                           {duration.label}
                         </Label>
                       </div>
                       {duration.discount > 0 && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded whitespace-nowrap">
                           خصم {duration.discount}%
                         </span>
                       )}
@@ -273,10 +273,10 @@ export default function Subscribe() {
                 </RadioGroup>
               </div>
 
-              <div className="bg-primary/5 p-4 rounded-lg">
+              <div className="bg-primary/5 p-3 md:p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-muted-foreground">المبلغ الإجمالي</span>
-                  <span className="text-2xl font-bold">{calculatePrice()} ريال</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">المبلغ الإجمالي</span>
+                  <span className="text-xl md:text-2xl font-bold">{calculatePrice()} ريال</span>
                 </div>
                 {DURATIONS.find(d => d.value === selectedDuration)?.discount! > 0 && (
                   <p className="text-xs text-muted-foreground">
@@ -288,36 +288,36 @@ export default function Subscribe() {
           </Card>
 
           {/* Payment Information */}
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">معلومات التحويل البنكي</h2>
+          <Card className="p-4 md:p-6 h-fit">
+            <h2 className="text-lg md:text-xl font-bold mb-4">معلومات التحويل البنكي</h2>
             
             <div className="space-y-4 mb-6">
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="p-3 md:p-4 bg-muted rounded-lg">
+                <div className="grid grid-cols-2 gap-2 md:gap-3 text-sm">
                   <div>
-                    <p className="text-muted-foreground mb-1">اسم الحساب</p>
-                    <p className="font-semibold">شركة لا تشتتني</p>
+                    <p className="text-xs text-muted-foreground mb-1">اسم الحساب</p>
+                    <p className="font-semibold text-xs md:text-sm">شركة لا تشتتني</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground mb-1">البنك</p>
-                    <p className="font-semibold">الراجحي</p>
+                    <p className="text-xs text-muted-foreground mb-1">البنك</p>
+                    <p className="font-semibold text-xs md:text-sm">الراجحي</p>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1">رقم الحساب</p>
-                    <p className="font-semibold">123456789</p>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">رقم الحساب</p>
+                    <p className="font-semibold text-xs md:text-sm">123456789</p>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1">الآيبان</p>
-                    <p className="font-semibold">SA00000000000000</p>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">الآيبان</p>
+                    <p className="font-semibold text-xs md:text-sm break-all">SA00000000000000</p>
                   </div>
                 </div>
               </div>
 
               <div className="border-t pt-4">
-                <Label htmlFor="payment-proof" className="mb-3 block">
+                <Label htmlFor="payment-proof" className="mb-3 block text-sm md:text-base">
                   رفع إيصال الدفع <span className="text-destructive">*</span>
                 </Label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed rounded-lg p-4 md:p-6 text-center hover:border-primary/50 transition-colors">
                   <Input
                     id="payment-proof"
                     type="file"
@@ -329,9 +329,9 @@ export default function Subscribe() {
                     htmlFor="payment-proof"
                     className="cursor-pointer flex flex-col items-center gap-2"
                   >
-                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <Upload className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-sm md:text-base">
                         {paymentProof ? paymentProof.name : "اضغط لرفع الملف"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
