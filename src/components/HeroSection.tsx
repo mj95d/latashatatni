@@ -2,8 +2,48 @@ import { MapPin, Search, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
+  const [stats, setStats] = useState({
+    stores: 0,
+    offers: 0,
+    cities: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // عدد المتاجر النشطة
+        const { count: storesCount } = await supabase
+          .from('stores')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+
+        // عدد العروض النشطة
+        const { count: offersCount } = await supabase
+          .from('offers')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+
+        // عدد المدن
+        const { count: citiesCount } = await supabase
+          .from('cities')
+          .select('*', { count: 'exact', head: true });
+
+        setStats({
+          stores: storesCount || 0,
+          offers: offersCount || 0,
+          cities: citiesCount || 0
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
   return (
     <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -69,15 +109,21 @@ const HeroSection = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
             <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">500+</div>
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
+                {stats.stores > 0 ? `+${stats.stores}` : '0'}
+              </div>
               <div className="text-sm md:text-base text-muted-foreground mt-1">متجر محلي</div>
             </div>
             <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-secondary/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent">1000+</div>
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent">
+                {stats.offers > 0 ? `+${stats.offers}` : '0'}
+              </div>
               <div className="text-sm md:text-base text-muted-foreground mt-1">منتج وعرض</div>
             </div>
             <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary-glow/40 transition-smooth">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent">15</div>
+              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent">
+                {stats.cities > 0 ? `+${stats.cities}` : '0'}
+              </div>
               <div className="text-sm md:text-base text-muted-foreground mt-1">مدينة</div>
             </div>
           </div>
