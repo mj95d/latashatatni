@@ -98,11 +98,14 @@ const Offers = () => {
     try {
       const { data, error } = await supabase
         .from("cities")
-        .select("name")
+        .select("id, name")
         .order("name");
 
       if (error) throw error;
-      setCities(["الكل", ...(data?.map(c => c.name) || [])]);
+      
+      // Remove duplicates using Set
+      const uniqueNames = Array.from(new Set(data?.map(c => c.name) || []));
+      setCities(["الكل", ...uniqueNames]);
     } catch (error) {
       console.error("Error fetching cities:", error);
     }
@@ -112,11 +115,14 @@ const Offers = () => {
     try {
       const { data, error } = await supabase
         .from("categories")
-        .select("name")
+        .select("id, name")
         .order("name");
 
       if (error) throw error;
-      setCategories(["الكل", ...(data?.map(c => c.name) || [])]);
+      
+      // Remove duplicates using Set
+      const uniqueNames = Array.from(new Set(data?.map(c => c.name) || []));
+      setCategories(["الكل", ...uniqueNames]);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }

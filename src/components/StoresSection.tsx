@@ -25,10 +25,46 @@ const StoresSection = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortByDistance, setSortByDistance] = useState(false);
 
   useEffect(() => {
     fetchStores();
+    // Try to get user location on mount
+    getUserLocation();
   }, []);
+
+  const getUserLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setSortByDistance(true);
+        },
+        (error) => {
+          console.log("Location not available, showing all stores");
+        },
+        { timeout: 5000, enableHighAccuracy: false }
+      );
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   const fetchStores = async () => {
     try {
@@ -39,16 +75,45 @@ const StoresSection = () => {
           categories(name)
         `)
         .eq('is_active', true)
-        .limit(4);
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
 
       if (error) throw error;
-      setStores(data || []);
+      
+      let processedStores = data || [];
+      
+      // Sort by distance if user location is available
+      if (userLocation && sortByDistance) {
+        processedStores = processedStores
+          .map(store => ({
+            ...store,
+            distance: calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              store.latitude!,
+              store.longitude!
+            )
+          }))
+          .sort((a: any, b: any) => a.distance - b.distance)
+          .slice(0, 4);
+      } else {
+        processedStores = processedStores.slice(0, 4);
+      }
+      
+      setStores(processedStores);
     } catch (error) {
       console.error('Error fetching stores:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Re-fetch when user location changes
+  useEffect(() => {
+    if (userLocation && sortByDistance) {
+      fetchStores();
+    }
+  }, [userLocation, sortByDistance]);
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-4 lg:px-6">
@@ -57,11 +122,13 @@ const StoresSection = () => {
           <div>
             <h2 className="text-4xl md:text-5xl font-bold mb-3">
               <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
-                متاجر قريبة منك
+                {sortByDistance && userLocation ? 'متاجر قريبة منك' : 'متاجر مميزة'}
               </span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              اكتشف أفضل المتاجر المحلية في منطقتك
+              {sortByDistance && userLocation 
+                ? 'أقرب المتاجر إلى موقعك الحالي'
+                : 'اكتشف أفضل المتاجر المحلية في منطقتك'}
             </p>
           </div>
           <div className="hidden md:flex gap-2">
@@ -121,9 +188,17 @@ const StoresSection = () => {
                   {/* Store Info */}
                   <div className="p-5 space-y-4">
                     <div>
-                      <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth">
-                        {store.name}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-bold text-xl group-hover:text-primary transition-smooth">
+                          {store.name}
+                        </h3>
+                        {sortByDistance && (store as any).distance !== undefined && (
+                          <Badge className="bg-primary/10 text-primary text-xs flex-shrink-0">
+                            <MapPin className="w-3 h-3 ml-1" />
+                            {(store as any).distance.toFixed(1)} كم
+                          </Badge>
+                        )}
+                      </div>
                       {store.categories?.name && (
                         <p className="text-sm text-muted-foreground">
                           {store.categories.name}
