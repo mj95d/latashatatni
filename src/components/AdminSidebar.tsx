@@ -53,12 +53,12 @@ export function AdminSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-primary/10 text-primary font-medium border-r-4 border-primary" 
+      ? "bg-primary/10 text-primary font-medium border-l-4 border-primary" 
       : "hover:bg-muted/50 text-foreground";
 
   return (
-    <Sidebar className={isCollapsed ? "w-16" : "w-64"}>
-      <SidebarContent className="bg-card border-l">
+    <Sidebar side="right" className={isCollapsed ? "w-16" : "w-64"}>
+      <SidebarContent className="bg-card border-r">
         <div className="p-4 border-b flex items-center justify-between">
           {!isCollapsed && (
             <h2 className="text-lg font-bold bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
@@ -76,7 +76,7 @@ export function AdminSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className={isCollapsed ? "h-5 w-5" : "ml-3 h-5 w-5"} />
+                      <item.icon className={isCollapsed ? "h-5 w-5" : "mr-3 h-5 w-5"} />
                       {!isCollapsed && <span className="text-sm">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
