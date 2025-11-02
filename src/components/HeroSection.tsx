@@ -167,9 +167,9 @@ const HeroSection = () => {
               </div>
               <div className="text-base md:text-lg font-semibold text-foreground">منتج وعرض</div>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary-glow/50 transition-smooth shadow-lg">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent mb-2">
-                {stats.cities > 0 ? `+${stats.cities}` : "0"}
+            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-blue-500/50 transition-smooth shadow-lg">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-blue-400 to-blue-600 bg-clip-text text-transparent mb-2">
+                +20
               </div>
               <div className="text-base md:text-lg font-semibold text-foreground">مدينة</div>
             </div>
