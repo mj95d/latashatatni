@@ -14,7 +14,8 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  ShoppingCart
+  ShoppingCart,
+  UserPlus
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const adminMenuItems = [
   { title: "التقارير", url: "/admin/reports", icon: FileText },
   { title: "السجلات", url: "/admin/logs", icon: ScrollText },
   { title: "صلاحيات الأدمن", url: "/admin/roles", icon: Shield },
+  { title: "إنشاء حسابات أدمن", url: "/admin/create-admins", icon: UserPlus },
   { title: "الإعدادات", url: "/admin/settings", icon: Settings },
 ];
 
