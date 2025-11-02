@@ -18,6 +18,16 @@ import jabalShada from "@/assets/tourism/jabal-shada.jpg";
 import raghadanForest from "@/assets/tourism/raghadan-forest.jpg";
 import alBalad from "@/assets/tourism/al-balad.jpg";
 import kingFahdFountain from "@/assets/tourism/king-fahd-fountain.jpg";
+import wadiHanifah from "@/assets/tourism/wadi-hanifah.jpg";
+import prophetsMosque from "@/assets/tourism/prophets-mosque.jpg";
+import jabalSouda from "@/assets/tourism/jabal-souda.jpg";
+import zeeAin from "@/assets/tourism/zee-ain.jpg";
+import kingAbdullahPark from "@/assets/tourism/king-abdullah-park.jpg";
+import boulevardRiyadh from "@/assets/tourism/boulevard-riyadh.jpg";
+import tabukCastle from "@/assets/tourism/tabuk-castle.jpg";
+import souqOkaz from "@/assets/tourism/souq-okaz.jpg";
+import mountUhud from "@/assets/tourism/mount-uhud.jpg";
+import alSalamPark from "@/assets/tourism/al-salam-park.jpg";
 
 interface TourismPlace {
   id: string;
@@ -43,6 +53,16 @@ const imageMap: Record<string, string> = {
   "غابة رغدان": raghadanForest,
   "البلد التاريخي": alBalad,
   "نافورة الملك فهد": kingFahdFountain,
+  "وادي حنيفة": wadiHanifah,
+  "المسجد النبوي الشريف": prophetsMosque,
+  "جبل السودة": jabalSouda,
+  "قرية ذي عين الأثرية": zeeAin,
+  "حديقة الملك عبدالله": kingAbdullahPark,
+  "بوليفارد الرياض": boulevardRiyadh,
+  "قلعة تبوك": tabukCastle,
+  "سوق عكاظ": souqOkaz,
+  "جبل أحد": mountUhud,
+  "منتزه السلام": alSalamPark,
 };
 
 const categories = ["الكل", "معالم تاريخية", "معالم طبيعية", "جبال وطبيعة", "متاحف", "حدائق", "أسواق تراثية"];
