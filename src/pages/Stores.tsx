@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ interface Category {
 }
 
 const Stores = () => {
+  const [searchParams] = useSearchParams();
   const [stores, setStores] = useState<Store[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,6 +53,27 @@ const Stores = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
   const { toast } = useToast();
+
+  // Handle URL search parameters
+  useEffect(() => {
+    const searchFromUrl = searchParams.get("search");
+    const cityFromUrl = searchParams.get("city");
+    
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl);
+    }
+    
+    if (cityFromUrl && cityFromUrl !== "all") {
+      // Will be set after cities are fetched
+      const cityId = cityFromUrl;
+      setTimeout(() => {
+        const city = cities.find(c => c.id === cityId);
+        if (city) {
+          setSelectedCity(city.name);
+        }
+      }, 100);
+    }
+  }, [searchParams, cities]);
 
   useEffect(() => {
     fetchData();
@@ -153,8 +176,15 @@ const Stores = () => {
   const filteredStores = stores.filter(store => {
     const cityMatch = selectedCity === "الكل" || store.cities?.name === selectedCity;
     const categoryMatch = selectedCategory === "الكل" || store.categories?.name === selectedCategory;
-    const searchMatch = store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                       (store.description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+    
+    // Enhanced search to include store name, description, category, and city
+    const searchLower = searchQuery.toLowerCase();
+    const searchMatch = searchQuery === "" || 
+                       store.name.toLowerCase().includes(searchLower) ||
+                       (store.description?.toLowerCase() || "").includes(searchLower) ||
+                       (store.categories?.name.toLowerCase() || "").includes(searchLower) ||
+                       (store.cities?.name.toLowerCase() || "").includes(searchLower);
+    
     return cityMatch && categoryMatch && searchMatch;
   }).map(store => {
     if (userLocation && store.latitude && store.longitude && sortByDistance) {

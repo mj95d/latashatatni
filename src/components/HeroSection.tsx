@@ -4,8 +4,20 @@ import { Input } from "@/components/ui/input";
 import heroBg from "@/assets/hero-bg-new.jpg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [cities, setCities] = useState<Array<{ id: string; name: string }>>([]);
   const [stats, setStats] = useState({
     stores: 0,
     offers: 0,
@@ -13,7 +25,7 @@ const HeroSection = () => {
   });
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         // عدد المتاجر النشطة
         const { count: storesCount } = await supabase
@@ -30,18 +42,42 @@ const HeroSection = () => {
         // عدد المدن
         const { count: citiesCount } = await supabase.from("cities").select("*", { count: "exact", head: true });
 
+        // جلب المدن للقائمة المنسدلة
+        const { data: citiesData } = await supabase
+          .from("cities")
+          .select("id, name")
+          .order("name");
+
         setStats({
           stores: storesCount || 0,
           offers: offersCount || 0,
           cities: citiesCount || 0,
         });
+
+        if (citiesData) {
+          setCities(citiesData);
+        }
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchStats();
+    fetchData();
   }, []);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.append("search", searchQuery);
+    if (selectedCity) params.append("city", selectedCity);
+    
+    navigate(`/stores?${params.toString()}`);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
   return (
     <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -80,22 +116,38 @@ const HeroSection = () => {
           <div className="bg-card rounded-3xl shadow-glow p-4 max-w-3xl mx-auto border-2 border-border/50 hover:border-primary/30 transition-smooth">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                 <Input
                   type="text"
                   placeholder="ابحث عن متجر أو منتج..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl"
                 />
               </div>
               <div className="flex-1 relative">
-                <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="اختر موقعك أو مدينتك"
-                  className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl"
-                />
+                <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10 pointer-events-none" />
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <SelectTrigger className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl">
+                    <SelectValue placeholder="اختر موقعك أو مدينتك" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع المدن</SelectItem>
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Button variant="hero" size="lg" className="h-14 px-10 text-base rounded-2xl shadow-glow hover:shadow-xl">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                onClick={handleSearch}
+                className="h-14 px-10 text-base rounded-2xl shadow-glow hover:shadow-xl"
+              >
                 ابحث الآن
               </Button>
             </div>
