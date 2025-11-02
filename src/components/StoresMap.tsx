@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+// Set custom default marker icon
+const defaultIcon = L.icon({
+  iconUrl: '/marker.png',
+  iconSize: [30, 45],
+  iconAnchor: [15, 45],
 });
+(L.Marker as any).prototype.options.icon = defaultIcon;
 
 interface Store {
   id: string;
@@ -32,7 +32,9 @@ export default function StoresMap({ stores }: StoresMapProps) {
 
   useEffect(() => {
     // Only create map if container exists and no map is already created
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+    if ((containerRef.current as any)._leaflet_id) return;
+    if (mapRef.current) return;
 
     // Filter stores that have valid coordinates
     const validStores = stores.filter(
