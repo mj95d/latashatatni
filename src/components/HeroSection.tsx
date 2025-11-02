@@ -1,7 +1,7 @@
 import { MapPin, Search, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroBg from "@/assets/hero-bg-new.jpg";
+import heroBg from "@/assets/hero-map-bg.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
