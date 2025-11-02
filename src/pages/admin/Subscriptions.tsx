@@ -51,7 +51,13 @@ export default function Subscriptions() {
     try {
       const { data, error } = await supabase
         .from('subscription_requests')
-        .select('*')
+        .select(`
+          *,
+          profiles:merchant_id (
+            full_name,
+            phone
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

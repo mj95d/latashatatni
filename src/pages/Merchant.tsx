@@ -13,6 +13,7 @@ import { Store, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
+import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -124,6 +125,9 @@ const Merchant = () => {
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-muted/30">
         <Navbar />
         <main className="flex-1 container mx-auto px-4 lg:px-6 py-16 md:py-24">
+          {/* Subscription Alert */}
+          <SubscriptionAlert />
+          
           <div className="text-center mb-12 space-y-4">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4 shadow-glow">
               <Store className="w-10 h-10 text-primary" />
