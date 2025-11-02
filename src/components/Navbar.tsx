@@ -11,6 +11,7 @@ import AdminNotifications from "./AdminNotifications";
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { isAdmin, isMerchant } = useUserRole();
 
@@ -27,6 +28,14 @@ const Navbar = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to stores or offers page with search query
+      navigate(`/stores?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-soft">
@@ -47,16 +56,29 @@ const Navbar = () => {
           </Link>
 
           {/* Search Bar - Hidden on mobile */}
-          <div className="hidden lg:flex flex-1 max-w-lg mx-8">
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث عن متاجر أو منتجات..."
-                className="pr-12 h-12 bg-background border-border/50 focus:border-primary/50 rounded-xl transition-smooth"
+                className="pr-12 h-12 bg-background border-2 border-border/50 focus:border-primary/50 rounded-xl transition-smooth hover:border-primary/30"
               />
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-8 px-2 text-xs hover:bg-primary/10"
+                  onClick={() => setSearchQuery("")}
+                >
+                  مسح
+                </Button>
+              )}
             </div>
-          </div>
+          </form>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
@@ -124,6 +146,20 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50 bg-card">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="mb-4 px-2">
+              <div className="relative w-full">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ابحث عن متاجر أو منتجات..."
+                  className="pr-12 h-12 bg-background border-2 border-border/50 focus:border-primary/50 rounded-xl transition-smooth"
+                />
+              </div>
+            </form>
+            
             <div className="flex flex-col gap-2">
               <Link to="/" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
