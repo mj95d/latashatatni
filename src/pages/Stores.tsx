@@ -433,22 +433,31 @@ const Stores = () => {
                       <div className="grid grid-cols-2 gap-2 pt-2">
                         {store.latitude && store.longitude && (
                           <Button 
+                            asChild
                             variant="default" 
                             className="w-full"
-                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`, '_blank')}
                           >
-                            <MapPin className="w-4 h-4 ml-1" />
-                            المسار
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`المسار إلى ${store.name}`}
+                            >
+                              <MapPin className="w-4 h-4 ml-1" />
+                              المسار
+                            </a>
                           </Button>
                         )}
                         {store.phone && (
                           <Button 
+                            asChild
                             variant="outline" 
                             className="w-full border-2"
-                            onClick={() => window.open(`tel:${store.phone}`, '_self')}
                           >
-                            <Phone className="w-4 h-4 ml-1" />
-                            اتصال
+                            <a href={`tel:${store.phone}`} aria-label={`اتصال بـ ${store.name}`}>
+                              <Phone className="w-4 h-4 ml-1" />
+                              اتصال
+                            </a>
                           </Button>
                         )}
                       </div>
