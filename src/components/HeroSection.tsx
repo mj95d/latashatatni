@@ -52,7 +52,7 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 lg:px-6 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-12">
+        <div className="max-w-4xl mx-auto text-center space-y-10">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer">
             <Store className="w-4 h-4" />
