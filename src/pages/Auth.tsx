@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, User, Phone, Shield } from "lucide-react";
+import { Lock, Mail, User, Phone, Shield, Store } from "lucide-react";
 import logo from "@/assets/logo-transparent.png";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isMerchant, setIsMerchant] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const navigate = useNavigate();
@@ -46,6 +48,7 @@ const Auth = () => {
           data: {
             full_name: fullName,
             phone: phone,
+            is_merchant: isMerchant,
           },
           emailRedirectTo: `${window.location.origin}/`,
         },
@@ -53,9 +56,13 @@ const Auth = () => {
 
       if (error) throw error;
 
+      const successMessage = isMerchant 
+        ? "تم إنشاء حسابك كتاجر بنجاح! يمكنك الآن إضافة متجرك وعروضك"
+        : "تم إنشاء حسابك بنجاح! مرحباً بك في لا تشتتني";
+
       toast({
         title: "تم إنشاء الحساب بنجاح!",
-        description: "مرحباً بك في لا تشتتني",
+        description: successMessage,
       });
 
       navigate("/");
@@ -274,6 +281,27 @@ const Auth = () => {
                     <p className="text-xs text-muted-foreground">
                       يجب أن تكون كلمة المرور 6 أحرف على الأقل
                     </p>
+                  </div>
+
+                  {/* Merchant Checkbox */}
+                  <div className="flex items-start space-x-2 space-x-reverse border-2 border-primary/20 rounded-lg p-4 bg-primary/5 hover:bg-primary/10 transition-colors">
+                    <Checkbox
+                      id="is-merchant"
+                      checked={isMerchant}
+                      onCheckedChange={(checked) => setIsMerchant(checked as boolean)}
+                    />
+                    <div className="flex-1 space-y-1">
+                      <Label
+                        htmlFor="is-merchant"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                      >
+                        <Store className="w-4 h-4 text-primary" />
+                        التسجيل كتاجر
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        احصل على لوحة تحكم لإدارة متجرك وعروضك (حد أقصى 10 إعلانات مجانية)
+                      </p>
+                    </div>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={loading}>
