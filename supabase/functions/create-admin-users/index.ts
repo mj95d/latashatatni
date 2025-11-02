@@ -32,48 +32,74 @@ serve(async (req) => {
 
     const { email, password, fullName, phone }: CreateAdminRequest = await req.json();
 
-    // Create user in auth
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        phone: phone || null,
-      },
-    });
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+    const userExists = existingUser?.users.find(u => u.email === email);
 
-    if (createError) throw createError;
+    let userId: string;
 
-    // Create profile
-    const { error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .insert({
-        id: userData.user.id,
-        full_name: fullName,
-        phone: phone || null,
-        is_merchant: false,
+    if (userExists) {
+      // User exists, just assign admin role
+      userId = userExists.id;
+      console.log("User already exists, assigning admin role:", userId);
+    } else {
+      // Create new user in auth
+      const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          phone: phone || null,
+        },
       });
 
-    if (profileError) throw profileError;
+      if (createError) {
+        console.error("Error creating user:", createError);
+        throw new Error(`فشل في إنشاء المستخدم: ${createError.message}`);
+      }
 
-    // Assign admin role
+      userId = userData.user.id;
+
+      // Create profile
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .upsert({
+          id: userId,
+          full_name: fullName,
+          phone: phone || null,
+          is_merchant: false,
+        });
+
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        throw new Error(`فشل في إنشاء الملف الشخصي: ${profileError.message}`);
+      }
+    }
+
+    // Assign admin role (use upsert to avoid duplicates)
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
-      .insert({
-        user_id: userData.user.id,
+      .upsert({
+        user_id: userId,
         role: "admin",
+      }, {
+        onConflict: "user_id,role"
       });
 
-    if (roleError) throw roleError;
+    if (roleError) {
+      console.error("Error assigning admin role:", roleError);
+      throw new Error(`فشل في تعيين صلاحيات الأدمن: ${roleError.message}`);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         user: {
-          id: userData.user.id,
-          email: userData.user.email,
+          id: userId,
+          email: email,
         },
+        message: userExists ? "تم تعيين صلاحيات الأدمن للمستخدم الموجود" : "تم إنشاء حساب الأدمن بنجاح"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -83,7 +109,10 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Error creating admin user:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || "حدث خطأ غير متوقع",
+        success: false
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,

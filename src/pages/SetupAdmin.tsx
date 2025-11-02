@@ -61,9 +61,16 @@ const SetupAdmin = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'فشل في استدعاء الخدمة');
+      }
 
-      toast.success("تم إنشاء حساب الأدمن بنجاح!");
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success(data?.message || "تم إنشاء حساب الأدمن بنجاح!");
       
       // تسجيل الدخول تلقائياً
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -72,6 +79,7 @@ const SetupAdmin = () => {
       });
 
       if (signInError) {
+        console.error('Sign in error:', signInError);
         toast.error("تم إنشاء الحساب لكن فشل تسجيل الدخول التلقائي. يرجى تسجيل الدخول يدوياً");
         navigate("/auth");
       } else {
@@ -80,7 +88,7 @@ const SetupAdmin = () => {
       }
     } catch (error: any) {
       console.error('Error creating admin:', error);
-      toast.error(`فشل إنشاء الحساب: ${error.message || 'حدث خطأ غير متوقع'}`);
+      toast.error(error.message || 'حدث خطأ غير متوقع');
     } finally {
       setLoading(false);
     }
