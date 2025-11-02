@@ -54,15 +54,67 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const validateFile = (file: File, type: 'image' | 'document'): boolean => {
+    // Check file size (5MB max)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast({
+        title: "حجم الملف كبير جداً",
+        description: "يجب أن لا يتجاوز حجم الملف 5 ميجابايت",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Dangerous extensions to block
+    const dangerousExtensions = /\.(php|phtml|php3|php4|php5|phps|cgi|pl|py|rb|sh|exe|bat|cmd|com|jar|jsp|asp|aspx)$/i;
+    if (dangerousExtensions.test(file.name)) {
+      toast({
+        title: "نوع الملف غير مسموح",
+        description: "هذا النوع من الملفات غير مسموح به لأسباب أمنية",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Check MIME type
+    const allowedTypes = type === 'image' 
+      ? ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      : ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "نوع الملف غير صحيح",
+        description: type === 'image' 
+          ? "يجب أن يكون الملف صورة (JPG, PNG, WEBP)"
+          : "يجب أن يكون الملف صورة أو PDF",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (validateFile(file, 'image')) {
+        setLogoFile(file);
+      } else {
+        e.target.value = ''; // Reset input
+      }
     }
   };
 
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setDocumentFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (validateFile(file, 'document')) {
+        setDocumentFile(file);
+      } else {
+        e.target.value = ''; // Reset input
+      }
     }
   };
 
@@ -90,6 +142,18 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+
+      // Check store limit before uploading files
+      const { count, error: countError } = await supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
+      if (countError) throw countError;
+
+      if (count !== null && count >= 10) {
+        throw new Error("لقد وصلت للحد الأقصى من المتاجر (10 متاجر)");
+      }
 
       let logoUrl = null;
       let documentUrl = null;
@@ -319,7 +383,7 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
               <Input
                 id="logo"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={handleLogoChange}
                 className="h-12"
               />
@@ -339,7 +403,7 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
               <Input
                 id="document"
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
+                accept="image/jpeg,image/jpg,image/png,application/pdf"
                 onChange={handleDocumentChange}
                 required
                 className="h-12"
