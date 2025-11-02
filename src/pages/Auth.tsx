@@ -390,7 +390,7 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        minLength={8}
+                        minLength={6}
                         className="pr-10"
                       />
                     </div>

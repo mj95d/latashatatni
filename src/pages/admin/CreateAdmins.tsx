@@ -58,8 +58,8 @@ const CreateAdmins = () => {
       return;
     }
 
-    if (newAdmin.password.length < 8) {
-      toast.error("يجب أن تكون كلمة المرور 8 أحرف على الأقل");
+    if (newAdmin.password.length < 6) {
+      toast.error("يجب أن تكون كلمة المرور 6 أحرف على الأقل");
       return;
     }
 
@@ -145,7 +145,7 @@ const CreateAdmins = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="8 أحرف على الأقل"
+                placeholder="6 أحرف على الأقل"
                 value={newAdmin.password}
                 onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
                 disabled={loading}

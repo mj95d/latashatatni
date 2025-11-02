@@ -17,28 +17,8 @@ const commonPasswords = [
 export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements: PasswordRequirement[] = [
     {
-      label: "لا يقل عن 8 أحرف",
-      test: (pwd) => pwd.length >= 8
-    },
-    {
-      label: "حرف كبير (A-Z)",
-      test: (pwd) => /[A-Z]/.test(pwd)
-    },
-    {
-      label: "حرف صغير (a-z)",
-      test: (pwd) => /[a-z]/.test(pwd)
-    },
-    {
-      label: "رقم (0-9)",
-      test: (pwd) => /[0-9]/.test(pwd)
-    },
-    {
-      label: "رمز خاص (!@#$%...)",
-      test: (pwd) => /[!@#$%^&*()_+\-=\[\]{}|;':",.<>/?]/.test(pwd)
-    },
-    {
-      label: "ليست كلمة مرور شائعة",
-      test: (pwd) => !commonPasswords.includes(pwd.toLowerCase())
+      label: "لا يقل عن 6 أحرف",
+      test: (pwd) => pwd.length >= 6
     }
   ];
 
@@ -107,23 +87,8 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
 export const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (password.length < 8) {
+  if (password.length < 6) {
     errors.push('MIN_LENGTH');
-  }
-  if (!/[A-Z]/.test(password)) {
-    errors.push('MISSING_UPPERCASE');
-  }
-  if (!/[a-z]/.test(password)) {
-    errors.push('MISSING_LOWERCASE');
-  }
-  if (!/[0-9]/.test(password)) {
-    errors.push('MISSING_NUMBER');
-  }
-  if (!/[!@#$%^&*()_+\-=\[\]{}|;':",.<>/?]/.test(password)) {
-    errors.push('MISSING_SPECIAL');
-  }
-  if (commonPasswords.includes(password.toLowerCase())) {
-    errors.push('COMMON_PASSWORD');
   }
 
   return {
