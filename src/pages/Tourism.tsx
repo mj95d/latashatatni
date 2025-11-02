@@ -10,6 +10,7 @@ import { MapPin, Camera, Mountain, Coffee, Store, Map } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TourismMap from "@/components/TourismMap";
+import NearbyStoresDialog from "@/components/NearbyStoresDialog";
 
 // Import tourism images
 import masmakFort from "@/assets/tourism/masmak-fort.jpg";
@@ -84,7 +85,22 @@ const Tourism = () => {
   const [selectedCategory, setSelectedCategory] = useState("الكل");
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [nearbyStoresDialogOpen, setNearbyStoresDialogOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<TourismPlace | null>(null);
   const { toast } = useToast();
+
+  const handleShowNearbyStores = (place: TourismPlace) => {
+    if (!place.latitude || !place.longitude) {
+      toast({
+        title: "الموقع غير متوفر",
+        description: "هذا المعلم لا يحتوي على إحداثيات محددة",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSelectedPlace(place);
+    setNearbyStoresDialogOpen(true);
+  };
 
   useEffect(() => {
     fetchData();
@@ -288,10 +304,16 @@ const Tourism = () => {
                             className="w-full"
                             onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`, '_blank')}
                           >
+                            <MapPin className="w-4 h-4 ml-1" />
                             عرض المكان
                           </Button>
                         )}
-                        <Button variant="outline" className="w-full border-2">
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-2 hover:border-primary/50 hover:text-primary"
+                          onClick={() => handleShowNearbyStores(place)}
+                        >
+                          <Store className="w-4 h-4 ml-1" />
                           المتاجر القريبة
                         </Button>
                       </div>
@@ -312,6 +334,17 @@ const Tourism = () => {
           )}
         </div>
       </main>
+
+      {/* Nearby Stores Dialog */}
+      {selectedPlace && (
+        <NearbyStoresDialog
+          open={nearbyStoresDialogOpen}
+          onOpenChange={setNearbyStoresDialogOpen}
+          placeLatitude={selectedPlace.latitude!}
+          placeLongitude={selectedPlace.longitude!}
+          placeName={selectedPlace.name}
+        />
+      )}
 
       <Footer />
     </div>
