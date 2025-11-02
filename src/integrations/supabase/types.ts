@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_read: boolean | null
+          related_id: string | null
+          related_table: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          related_table?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          related_table?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       admin_permissions: {
         Row: {
           admin_id: string
@@ -391,32 +424,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           avatar_url: string | null
           city: string | null
           created_at: string | null
+          deleted_at: string | null
           full_name: string | null
           id: string
           is_merchant: boolean | null
+          last_login_at: string | null
+          last_login_device: string | null
+          last_login_ip: string | null
           phone: string | null
           updated_at: string | null
         }
         Insert: {
+          account_status?: string | null
           avatar_url?: string | null
           city?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           full_name?: string | null
           id: string
           is_merchant?: boolean | null
+          last_login_at?: string | null
+          last_login_device?: string | null
+          last_login_ip?: string | null
           phone?: string | null
           updated_at?: string | null
         }
         Update: {
+          account_status?: string | null
           avatar_url?: string | null
           city?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           full_name?: string | null
           id?: string
           is_merchant?: boolean | null
+          last_login_at?: string | null
+          last_login_device?: string | null
+          last_login_ip?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -717,6 +765,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_activity: {
+        Row: {
+          activity_description: string | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_description?: string | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

@@ -13,7 +13,11 @@ import {
   UserCheck,
   Search,
   Filter,
-  MoreVertical
+  MoreVertical,
+  Download,
+  Ban,
+  CheckCircle,
+  Eye
 } from "lucide-react";
 import {
   Table,
@@ -48,6 +52,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UserDetailsModal } from "@/components/admin/UserDetailsModal";
+import { EditUserModal } from "@/components/admin/EditUserModal";
 
 interface User {
   id: string;
@@ -56,6 +62,9 @@ interface User {
   city: string;
   created_at: string;
   is_merchant: boolean;
+  account_status?: string;
+  last_login_at?: string;
+  deleted_at?: string;
   user_roles?: Array<{
     role: string;
   }>;
@@ -67,10 +76,13 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -113,8 +125,13 @@ const Users = () => {
     }
   };
 
+  const handleViewDetails = (user: User) => {
+    setSelectedUserId(user.id);
+    setShowDetailsDialog(true);
+  };
+
   const handleEditUser = (user: User) => {
-    setSelectedUser(user);
+    setSelectedUserId(user.id);
     setShowEditDialog(true);
   };
 
@@ -196,6 +213,53 @@ const Users = () => {
     }
   };
 
+  const handleSuspendUser = async (userId: string, suspend: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ account_status: suspend ? "suspended" : "active" })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: suspend ? "تم الإيقاف" : "تم التفعيل",
+        description: suspend 
+          ? "تم إيقاف حساب المستخدم بنجاح" 
+          : "تم تفعيل حساب المستخدم بنجاح",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ أثناء تحديث الحالة",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportToCSV = () => {
+    const csvData = filteredUsers.map(user => ({
+      "الاسم": user.full_name || "-",
+      "الجوال": user.phone || "-",
+      "المدينة": user.city || "-",
+      "الدور": getUserRole(user),
+      "الحالة": user.account_status || "active",
+      "تاريخ التسجيل": new Date(user.created_at).toLocaleDateString("ar-SA"),
+    }));
+
+    const headers = Object.keys(csvData[0]).join(",");
+    const rows = csvData.map(row => Object.values(row).join(",")).join("\n");
+    const csv = `${headers}\n${rows}`;
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `users_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+  };
+
   const getUserRole = (user: User) => {
     const role = user.user_roles?.[0]?.role;
     if (!role) return "user";
@@ -221,19 +285,31 @@ const Users = () => {
   const filteredUsers = users.filter((user) => {
     const matchesSearch = 
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone?.includes(searchQuery);
+      user.phone?.includes(searchQuery) ||
+      user.city?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const userRole = getUserRole(user);
     const matchesRole = filterRole === "all" || userRole === filterRole;
 
-    return matchesSearch && matchesRole;
+    const userStatus = user.account_status || "active";
+    const matchesStatus = filterStatus === "all" || userStatus === filterStatus;
+
+    // إخفاء المستخدمين المحذوفين
+    const isNotDeleted = !user.deleted_at;
+
+    return matchesSearch && matchesRole && matchesStatus && isNotDeleted;
   });
 
   const stats = {
-    total: users.length,
-    admins: users.filter(u => getUserRole(u) === "admin").length,
-    merchants: users.filter(u => getUserRole(u) === "merchant").length,
-    regularUsers: users.filter(u => getUserRole(u) === "user").length,
+    total: users.filter(u => !u.deleted_at).length,
+    admins: users.filter(u => getUserRole(u) === "admin" && !u.deleted_at).length,
+    merchants: users.filter(u => getUserRole(u) === "merchant" && !u.deleted_at).length,
+    regularUsers: users.filter(u => getUserRole(u) === "user" && !u.deleted_at).length,
+    suspended: users.filter(u => u.account_status === "suspended" && !u.deleted_at).length,
+    today: users.filter(u => {
+      const today = new Date().toDateString();
+      return new Date(u.created_at).toDateString() === today && !u.deleted_at;
+    }).length,
   };
 
   if (loading) {
@@ -253,10 +329,14 @@ const Users = () => {
             عرض وإدارة جميع مستخدمي المنصة وتحديد أدوارهم
           </p>
         </div>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2">
+          <Download className="w-4 h-4" />
+          تصدير CSV
+        </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -296,6 +376,26 @@ const Users = () => {
             <UsersIcon className="h-10 w-10 text-gray-500 opacity-50" />
           </div>
         </Card>
+
+        <Card className="p-6 bg-yellow-50/50 border-yellow-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">حسابات موقوفة</p>
+              <h3 className="text-3xl font-bold text-yellow-600">{stats.suspended}</h3>
+            </div>
+            <Ban className="h-10 w-10 text-yellow-500 opacity-50" />
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-green-50/50 border-green-200 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">تسجيلات اليوم</p>
+              <h3 className="text-3xl font-bold text-green-600">{stats.today}</h3>
+            </div>
+            <CheckCircle className="h-10 w-10 text-green-500 opacity-50" />
+          </div>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -306,7 +406,7 @@ const Users = () => {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث عن مستخدم بالاسم أو رقم الجوال..."
+              placeholder="ابحث عن مستخدم بالاسم، الجوال، أو المدينة..."
               className="pr-10"
             />
           </div>
@@ -323,6 +423,20 @@ const Users = () => {
               <SelectItem value="user">مستخدم</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <Filter className="w-4 h-4 ml-2" />
+              <SelectValue placeholder="تصفية حسب الحالة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع الحالات</SelectItem>
+              <SelectItem value="active">فعّال</SelectItem>
+              <SelectItem value="suspended">موقوف</SelectItem>
+              <SelectItem value="disabled">مُعطّل</SelectItem>
+              <SelectItem value="locked">مقفل</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 
@@ -335,6 +449,7 @@ const Users = () => {
               <TableHead>رقم الجوال</TableHead>
               <TableHead>المدينة</TableHead>
               <TableHead>الدور</TableHead>
+              <TableHead>الحالة</TableHead>
               <TableHead>تاريخ التسجيل</TableHead>
               <TableHead className="text-left">الإجراءات</TableHead>
             </TableRow>
@@ -342,7 +457,7 @@ const Users = () => {
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   لا توجد نتائج
                 </TableCell>
               </TableRow>
@@ -357,8 +472,31 @@ const Users = () => {
                   </TableCell>
                   <TableCell>{user.city || "-"}</TableCell>
                   <TableCell>{getRoleBadge(getUserRole(user))}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(user.created_at).toLocaleDateString("ar-SA", {
+                  <TableCell>
+                    {user.account_status === "suspended" && (
+                      <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
+                        <Ban className="w-3 h-3 ml-1" />
+                        موقوف
+                      </Badge>
+                    )}
+                    {user.account_status === "disabled" && (
+                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
+                        مُعطّل
+                      </Badge>
+                    )}
+                    {user.account_status === "locked" && (
+                      <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                        مقفل
+                      </Badge>
+                    )}
+                    {(!user.account_status || user.account_status === "active") && (
+                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                        <CheckCircle className="w-3 h-3 ml-1" />
+                        فعّال
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{new Date(user.created_at).toLocaleDateString("ar-SA", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
@@ -374,6 +512,10 @@ const Users = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleViewDetails(user)}>
+                          <Eye className="w-4 h-4 ml-2" />
+                          عرض التفاصيل
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleChangeRole(user)}>
                           <Shield className="w-4 h-4 ml-2" />
                           تغيير الدور
@@ -382,6 +524,24 @@ const Users = () => {
                           <Edit className="w-4 h-4 ml-2" />
                           تعديل البيانات
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {(!user.account_status || user.account_status === "active") ? (
+                          <DropdownMenuItem 
+                            onClick={() => handleSuspendUser(user.id, true)}
+                            className="text-yellow-600"
+                          >
+                            <Ban className="w-4 h-4 ml-2" />
+                            إيقاف الحساب
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            onClick={() => handleSuspendUser(user.id, false)}
+                            className="text-green-600"
+                          >
+                            <CheckCircle className="w-4 h-4 ml-2" />
+                            تفعيل الحساب
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => handleDeleteUser(user.id)}
@@ -400,17 +560,20 @@ const Users = () => {
         </Table>
       </Card>
 
+      {/* User Details Modal */}
+      <UserDetailsModal
+        userId={selectedUserId}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+      />
+
       {/* Edit User Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>تعديل بيانات المستخدم</DialogTitle>
-            <DialogDescription>
-              قريباً - سيتم إضافة نموذج التعديل
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      <EditUserModal
+        userId={selectedUserId}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={fetchUsers}
+      />
 
       {/* Change Role Dialog */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>

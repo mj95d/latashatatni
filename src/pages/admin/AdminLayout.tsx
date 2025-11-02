@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { AdminNotificationCenter } from "@/components/admin/AdminNotificationCenter";
 import { Loader2 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -41,6 +42,7 @@ const AdminLayout = () => {
                 لا تشتتني - لوحة الإدارة
               </h1>
             </div>
+            <AdminNotificationCenter />
           </header>
 
           {/* Main Content */}
