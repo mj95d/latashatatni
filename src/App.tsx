@@ -21,6 +21,7 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Stats from "./pages/Stats";
 import NotFound from "./pages/NotFound";
+import SetupAdmin from "./pages/SetupAdmin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Subscribe from "./pages/merchant/Subscribe";
 import * as AdminPages from "./pages/admin";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/plans" element={<Plans />} />
           <Route path="/about" element={<About />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/setup-admin" element={<SetupAdmin />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/merchant" element={<Merchant />} />
