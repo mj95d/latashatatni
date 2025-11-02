@@ -1,57 +1,59 @@
-import { MapPin, Star, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Star, Clock, Map as MapIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import StoresMap from "./StoresMap";
+import { Link } from "react-router-dom";
 
-const stores = [
-  {
-    id: 1,
-    name: "متجر النخبة للعطور",
-    category: "عطور ومستحضرات",
-    rating: 4.8,
-    distance: "0.5 كم",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=300&fit=crop",
-    status: "مفتوح الآن",
-    offers: 3,
-  },
-  {
-    id: 2,
-    name: "مطعم الذواقة",
-    category: "مطاعم",
-    rating: 4.6,
-    distance: "1.2 كم",
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop",
-    status: "مفتوح الآن",
-    offers: 2,
-  },
-  {
-    id: 3,
-    name: "بوتيك الأناقة",
-    category: "ملابس",
-    rating: 4.9,
-    distance: "0.8 كم",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-    status: "مفتوح الآن",
-    offers: 5,
-  },
-  {
-    id: 4,
-    name: "مكتبة المعرفة",
-    category: "كتب وقرطاسية",
-    rating: 4.7,
-    distance: "2.0 كم",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&fit=crop",
-    status: "يغلق الساعة 10 م",
-    offers: 1,
-  },
-];
+interface Store {
+  id: string;
+  name: string;
+  description: string | null;
+  phone: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  rating: number | null;
+  is_active: boolean | null;
+  categories: { name: string } | null;
+}
 
 const StoresSection = () => {
+  const [stores, setStores] = useState<Store[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
+  const fetchStores = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('stores')
+        .select(`
+          *,
+          categories(name)
+        `)
+        .eq('is_active', true)
+        .limit(4);
+
+      if (error) throw error;
+      setStores(data || []);
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-4 lg:px-6">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-16">
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-4xl md:text-5xl font-bold mb-3">
               <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">
@@ -62,71 +64,102 @@ const StoresSection = () => {
               اكتشف أفضل المتاجر المحلية في منطقتك
             </p>
           </div>
-          <Button variant="outline" className="hidden md:flex border-2 hover:border-primary/50 hover:text-primary">
-            عرض الكل
-          </Button>
+          <div className="hidden md:flex gap-2">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "map")} className="w-auto">
+              <TabsList>
+                <TabsTrigger value="grid">قائمة</TabsTrigger>
+                <TabsTrigger value="map" className="gap-2">
+                  <MapIcon className="h-4 w-4" />
+                  خريطة
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Link to="/stores">
+              <Button variant="outline" className="border-2 hover:border-primary/50 hover:text-primary">
+                عرض الكل
+              </Button>
+            </Link>
+          </div>
         </div>
+
+        {/* Map View */}
+        {viewMode === "map" && (
+          <div className="mb-8 animate-fade-in">
+            <StoresMap stores={stores.map(s => ({
+              id: s.id,
+              name: s.name,
+              latitude: s.latitude,
+              longitude: s.longitude,
+              phone: s.phone,
+              rating: s.rating,
+              address: s.address,
+              is_active: s.is_active
+            }))} />
+          </div>
+        )}
 
         {/* Stores Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {stores.map((store) => (
-            <Card
-              key={store.id}
-              className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40"
-            >
-              {/* Store Image */}
-              <div className="relative h-52 overflow-hidden">
-                <img
-                  src={store.image}
-                  alt={store.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
-                {store.offers > 0 && (
-                  <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-sm px-3 py-1.5 shadow-lg">
-                    {store.offers} عروض
-                  </Badge>
-                )}
+        {viewMode === "grid" && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {loading ? (
+              <div className="col-span-full text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
               </div>
-
-              {/* Store Info */}
-              <div className="p-5 space-y-4">
-                <div>
-                  <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth">
-                    {store.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {store.category}
-                  </p>
-                </div>
-
-                {/* Rating & Distance */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg">
-                    <Star className="w-4 h-4 fill-secondary text-secondary" />
-                    <span className="font-semibold text-foreground">{store.rating}</span>
+            ) : (
+              stores.map((store) => (
+                <Card
+                  key={store.id}
+                  className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40"
+                >
+                  {/* Store Image */}
+                  <div className="relative h-52 overflow-hidden bg-muted">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center">
+                      <MapPin className="w-12 h-12 text-white/30" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{store.distance}</span>
-                  </div>
-                </div>
 
-                {/* Status */}
-                <div className="flex items-center gap-2 text-sm pt-2 border-t border-border/50">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-semibold">{store.status}</span>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+                  {/* Store Info */}
+                  <div className="p-5 space-y-4">
+                    <div>
+                      <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-smooth">
+                        {store.name}
+                      </h3>
+                      {store.categories?.name && (
+                        <p className="text-sm text-muted-foreground">
+                          {store.categories.name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Rating */}
+                    {store.rating && (
+                      <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg w-fit">
+                        <Star className="w-4 h-4 fill-secondary text-secondary" />
+                        <span className="font-semibold text-foreground">{store.rating.toFixed(1)}</span>
+                      </div>
+                    )}
+
+                    {/* Address */}
+                    {store.address && (
+                      <div className="flex items-start gap-2 text-sm pt-2 border-t border-border/50">
+                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground text-xs line-clamp-2">{store.address}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Mobile View All Button */}
         <div className="mt-12 text-center md:hidden">
-          <Button variant="outline" className="w-full max-w-sm border-2 hover:border-primary/50">
-            عرض جميع المتاجر
-          </Button>
+          <Link to="/stores" className="block">
+            <Button variant="outline" className="w-full max-w-sm border-2 hover:border-primary/50">
+              عرض جميع المتاجر
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
