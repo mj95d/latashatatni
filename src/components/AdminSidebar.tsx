@@ -13,7 +13,8 @@ import {
   ScrollText,
   Shield,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ShoppingCart
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ const adminMenuItems = [
   { title: "لوحة التحكم", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "إدارة المستخدمين", url: "/admin/users", icon: Users },
   { title: "طلبات التجار", url: "/admin/merchant-requests", icon: UserCheck },
+  { title: "الطلبات", url: "/admin/orders", icon: ShoppingCart },
   { title: "إدارة المتاجر", url: "/admin/stores", icon: Store },
   { title: "إدارة المنتجات", url: "/admin/products", icon: Package },
   { title: "إدارة العروض", url: "/admin/offers", icon: Tag },

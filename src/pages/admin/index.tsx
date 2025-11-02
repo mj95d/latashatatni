@@ -1,6 +1,7 @@
 // Placeholder components for admin sections
 export { default as Dashboard } from "./Dashboard";
 export { default as MerchantRequests } from "./MerchantRequests";
+export { default as Orders } from "./Orders";
 
 // Placeholder components - will be implemented later
 export const Users = () => <div className="p-6"><h1 className="text-2xl font-bold">إدارة المستخدمين</h1><p className="text-muted-foreground mt-2">قريباً...</p></div>;
