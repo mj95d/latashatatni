@@ -11,6 +11,7 @@ import { Lock, Mail, User, Phone, Shield, Store } from "lucide-react";
 import logo from "@/assets/logo-transparent.png";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PasswordStrengthIndicator, validatePassword } from "@/components/PasswordStrengthIndicator";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,18 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      toast({
+        variant: "destructive",
+        title: "كلمة المرور ضعيفة",
+        description: "يرجى التأكد من استيفاء جميع شروط كلمة المرور الآمنة",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -274,13 +287,13 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        minLength={6}
+                        minLength={8}
                         className="pr-10"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      يجب أن تكون كلمة المرور 6 أحرف على الأقل
-                    </p>
+                    
+                    {/* Password Strength Indicator */}
+                    <PasswordStrengthIndicator password={password} />
                   </div>
 
                   {/* Merchant Checkbox */}
