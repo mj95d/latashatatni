@@ -9,7 +9,7 @@ const HeroSection = () => {
   const [stats, setStats] = useState({
     stores: 0,
     offers: 0,
-    cities: 0
+    cities: 0,
   });
 
   useEffect(() => {
@@ -17,28 +17,26 @@ const HeroSection = () => {
       try {
         // عدد المتاجر النشطة
         const { count: storesCount } = await supabase
-          .from('stores')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+          .from("stores")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
 
         // عدد العروض النشطة
         const { count: offersCount } = await supabase
-          .from('offers')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+          .from("offers")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
 
         // عدد المدن
-        const { count: citiesCount } = await supabase
-          .from('cities')
-          .select('*', { count: 'exact', head: true });
+        const { count: citiesCount } = await supabase.from("cities").select("*", { count: "exact", head: true });
 
         setStats({
           stores: storesCount || 0,
           offers: offersCount || 0,
-          cities: citiesCount || 0
+          cities: citiesCount || 0,
         });
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error("Error fetching stats:", error);
       }
     };
 
@@ -48,17 +46,13 @@ const HeroSection = () => {
     <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
-        <img
-          src={heroBg}
-          alt="أسواق محلية في السعودية"
-          className="w-full h-full object-cover"
-        />
+        <img src={heroBg} alt="أسواق محلية في السعودية" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/98 via-background/85 to-background/98" />
       </div>
 
       {/* Content */}
       <div className="container mx-auto px-4 lg:px-6 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-10">
+        <div className="max-w-4xl mx-auto text-center space-y-12">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer">
             <Store className="w-4 h-4" />
@@ -78,7 +72,8 @@ const HeroSection = () => {
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             سجّل مجانًا، وخلّ عروضك توصل للعملاء القريبين منك.
             <br />
-            عمولتنا فقط <span className="text-primary font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو اشتراك شهري.
+            عمولتنا فقط <span className="text-primary font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
+            اشتراك شهري.
           </p>
 
           {/* Search Box */}
@@ -110,19 +105,19 @@ const HeroSection = () => {
           <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
             <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-lg">
               <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-2">
-                {stats.stores > 0 ? `+${stats.stores}` : '0'}
+                {stats.stores > 0 ? `+${stats.stores}` : "0"}
               </div>
               <div className="text-base md:text-lg font-semibold text-foreground">متجر محلي</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-lg">
               <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-2">
-                {stats.offers > 0 ? `+${stats.offers}` : '0'}
+                {stats.offers > 0 ? `+${stats.offers}` : "0"}
               </div>
               <div className="text-base md:text-lg font-semibold text-foreground">منتج وعرض</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary-glow/50 transition-smooth shadow-lg">
               <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary-glow to-primary bg-clip-text text-transparent mb-2">
-                {stats.cities > 0 ? `+${stats.cities}` : '0'}
+                {stats.cities > 0 ? `+${stats.cities}` : "0"}
               </div>
               <div className="text-base md:text-lg font-semibold text-foreground">مدينة</div>
             </div>
