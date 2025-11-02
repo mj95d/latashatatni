@@ -77,6 +77,27 @@ const Stores = () => {
 
   useEffect(() => {
     fetchData();
+    
+    // Set up realtime subscription for stores
+    const channel = supabase
+      .channel('stores-page-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stores'
+        },
+        (payload) => {
+          console.log('Store change detected in Stores page:', payload);
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchData = async () => {

@@ -30,8 +30,30 @@ const StoresSection = () => {
 
   useEffect(() => {
     fetchStores();
-    // Try to get user location on mount
     getUserLocation();
+    
+    // Set up realtime subscription for store changes
+    const channel = supabase
+      .channel('stores-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'stores',
+          filter: 'is_active=eq.true' // Only active stores
+        },
+        (payload) => {
+          console.log('Store change detected in StoresSection:', payload);
+          // Re-fetch stores when changes occur
+          fetchStores();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getUserLocation = () => {

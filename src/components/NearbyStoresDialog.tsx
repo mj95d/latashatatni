@@ -41,6 +41,28 @@ export default function NearbyStoresDialog({
   useEffect(() => {
     if (open && placeLatitude && placeLongitude) {
       fetchNearbyStores();
+      
+      // Set up realtime subscription for new stores
+      const channel = supabase
+        .channel('stores-nearby-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'stores'
+          },
+          (payload) => {
+            console.log('Store change detected:', payload);
+            // Refresh stores when changes occur
+            fetchNearbyStores();
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [open, placeLatitude, placeLongitude]);
 
