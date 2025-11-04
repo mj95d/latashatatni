@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { 
   Store, MapPin, Tag, ArrowRight, MessageSquare, Phone, Star,
-  Truck, ShoppingBag, Package, Shield
+  Truck, ShoppingBag, Package, Shield, ImageIcon
 } from "lucide-react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselApi } from "@/components/ui/carousel";
 import { toast } from "sonner";
 import { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP, generateOrderId } from "@/lib/whatsapp";
 import {
@@ -57,6 +57,8 @@ const Product = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [orderData, setOrderData] = useState({
     customerName: "",
     customerPhone: "",
@@ -69,6 +71,14 @@ const Product = () => {
       fetchProduct();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    carouselApi.on("select", () => {
+      setCurrentImageIndex(carouselApi.selectedScrollSnap());
+    });
+  }, [carouselApi]);
 
   const fetchProduct = async () => {
     try {
@@ -102,22 +112,29 @@ const Product = () => {
         return;
       }
 
-      // Ensure images are always an array of URLs
+      // Ensure images are always an array of valid URLs
       if (data.images) {
         if (Array.isArray(data.images)) {
-          // Already an array, good
-          data.images = data.images.map((img: any) => 
-            typeof img === 'string' ? img : (img as any)?.url || img
-          );
-        } else if (typeof data.images === 'string') {
+          // Filter and clean array of URLs
+          data.images = data.images
+            .map((img: any) => {
+              if (typeof img === 'string') return img;
+              if (typeof img === 'object' && img?.url) return img.url;
+              return null;
+            })
+            .filter((url): url is string => url !== null && url.trim() !== '');
+        } else if (typeof data.images === 'string' && data.images.trim() !== '') {
           // Single URL string, convert to array
           data.images = [data.images];
-        } else if (typeof data.images === 'object' && (data.images as any).url) {
-          // Object with url property
-          data.images = [(data.images as any).url];
+        } else {
+          // Invalid format, use empty array
+          data.images = [];
         }
+      } else {
+        data.images = [];
       }
 
+      console.log('Product images:', data.images); // Debug log
       setProduct(data);
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -246,43 +263,66 @@ const Product = () => {
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* Product Images */}
-          <div>
+          <div className="space-y-4">
             {productImages.length > 1 ? (
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {productImages.map((imgUrl, index) => (
-                    <CarouselItem key={index}>
-                       <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-                         <img
-                           src={typeof imgUrl === 'string' ? imgUrl : (imgUrl as any)?.url || String(imgUrl)}
-                           alt={`${product.name} - صورة ${index + 1}`}
-                           loading="lazy"
-                           className="w-full h-full object-cover"
-                           onError={(e) => {
-                             const target = e.target as HTMLImageElement;
-                             target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
-                             console.error('Failed to load image:', imgUrl);
-                           }}
-                         />
-                        {discount && index === 0 && (
-                          <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl">
-                            <Tag className="w-5 h-5 ml-2" />
-                            خصم {discount}%
-                          </Badge>
-                        )}
-                      </div>
-                    </CarouselItem>
+              <>
+                <Carousel className="w-full" setApi={setCarouselApi}>
+                  <CarouselContent>
+                    {productImages.map((imgUrl, index) => (
+                      <CarouselItem key={index}>
+                        <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-muted/50 to-muted shadow-lg">
+                          <img
+                            src={typeof imgUrl === 'string' ? imgUrl : String(imgUrl)}
+                            alt={`${product.name} - صورة ${index + 1}`}
+                            loading={index === 0 ? "eager" : "lazy"}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                              console.error('Failed to load image:', imgUrl);
+                            }}
+                          />
+                          {discount && index === 0 && (
+                            <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl hover:scale-105 transition-transform">
+                              <Tag className="w-5 h-5 ml-2" />
+                              خصم {discount}%
+                            </Badge>
+                          )}
+                          {/* Image counter */}
+                          <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" />
+                            {currentImageIndex + 1} / {productImages.length}
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-4 bg-background/80 backdrop-blur-sm hover:bg-background" />
+                  <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm hover:bg-background" />
+                </Carousel>
+                
+                {/* Image indicators (dots) */}
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  {productImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => carouselApi?.scrollTo(index)}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === currentImageIndex 
+                          ? 'w-8 bg-primary' 
+                          : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                      }`}
+                      aria-label={`الذهاب إلى الصورة ${index + 1}`}
+                    />
                   ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-4" />
-                <CarouselNext className="right-4" />
-              </Carousel>
+                </div>
+              </>
             ) : (
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-muted/50 to-muted shadow-lg">
                 <img
-                  src={typeof productImages[0] === 'string' ? productImages[0] : (productImages[0] as any)?.url || String(productImages[0])}
+                  src={typeof productImages[0] === 'string' ? productImages[0] : String(productImages[0])}
                   alt={product.name}
-                  loading="lazy"
+                  loading="eager"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -291,11 +331,40 @@ const Product = () => {
                   }}
                 />
                 {discount && (
-                  <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl">
+                  <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl hover:scale-105 transition-transform">
                     <Tag className="w-5 h-5 ml-2" />
                     خصم {discount}%
                   </Badge>
                 )}
+              </div>
+            )}
+
+            {/* Thumbnail preview for multiple images */}
+            {productImages.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {productImages.slice(0, 5).map((imgUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => carouselApi?.scrollTo(index)}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                      index === currentImageIndex 
+                        ? 'border-primary shadow-md scale-105' 
+                        : 'border-transparent hover:border-primary/50'
+                    }`}
+                  >
+                    <img
+                      src={typeof imgUrl === 'string' ? imgUrl : String(imgUrl)}
+                      alt={`معاينة ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    {index === 4 && productImages.length > 5 && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-sm">
+                        +{productImages.length - 5}
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
             )}
           </div>

@@ -337,57 +337,76 @@ const StoreView = () => {
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <Card
-                  key={product.id}
-                  className="overflow-hidden cursor-pointer group hover:shadow-lg transition-all"
-                  onClick={() => handleProductClick(product.id)}
-                >
-                  <div className="relative h-48 bg-muted">
-                    {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
+              {products.map((product) => {
+                // Extract first valid image URL
+                let mainImage = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop';
+                let imageCount = 0;
+                
+                if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                  imageCount = product.images.length;
+                  const firstImg = product.images[0];
+                  mainImage = typeof firstImg === 'string' ? firstImg : 
+                              (typeof firstImg === 'object' && firstImg?.url) ? firstImg.url : 
+                              String(firstImg);
+                }
+                
+                return (
+                  <Card
+                    key={product.id}
+                    className="overflow-hidden cursor-pointer group hover:shadow-lg transition-all duration-300"
+                    onClick={() => handleProductClick(product.id)}
+                  >
+                    <div className="relative h-48 bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
                       <img
-                        src={typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url || String(product.images[0])}
+                        src={mainImage}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.onerror = null;
                           target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop';
-                          console.error('Failed to load product image in store view:', product.images[0]);
                         }}
                       />
-                    ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <ImageIcon className="w-12 h-12 text-muted-foreground" />
-                      </div>
-                    )}
-                    {product.old_price && product.old_price > (product.price || 0) && (
-                      <Badge className="absolute top-2 right-2 bg-secondary text-secondary-foreground">
-                        خصم {Math.round(((product.old_price - (product.price || 0)) / product.old_price) * 100)}%
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="p-4 space-y-2">
-                    <h4 className="font-bold line-clamp-1">{product.name}</h4>
-                    {product.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold" dir="ltr">
-                        {product.price ? `${product.price.toFixed(2)} ر.س` : "السعر عند الطلب"}
-                      </span>
+                      
+                      {/* Image count indicator */}
+                      {imageCount > 1 && (
+                        <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          {imageCount}
+                        </div>
+                      )}
+                      
+                      {/* Discount badge */}
                       {product.old_price && product.old_price > (product.price || 0) && (
-                        <span className="text-sm line-through text-muted-foreground" dir="ltr">
-                          {product.old_price.toFixed(2)} ر.س
-                        </span>
+                        <Badge className="absolute top-2 right-2 bg-secondary text-secondary-foreground font-bold shadow-lg">
+                          خصم {Math.round(((product.old_price - (product.price || 0)) / product.old_price) * 100)}%
+                        </Badge>
                       )}
                     </div>
-                  </div>
-                </Card>
-              ))}
+
+                    <div className="p-4 space-y-2">
+                      <h4 className="font-bold line-clamp-1 group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h4>
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-lg font-bold text-primary" dir="ltr">
+                          {product.price ? `${product.price.toFixed(2)} ر.س` : "السعر عند الطلب"}
+                        </span>
+                        {product.old_price && product.old_price > (product.price || 0) && (
+                          <span className="text-sm line-through text-muted-foreground" dir="ltr">
+                            {product.old_price.toFixed(2)} ر.س
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
