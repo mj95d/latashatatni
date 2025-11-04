@@ -106,14 +106,25 @@ const Stores = () => {
       setLoading(true);
       
       // Fetch stores with cities and categories
-      const { data: storesData, error: storesError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+
+      let storesQuery = supabase
         .from('stores')
         .select(`
           *,
           cities(name),
           categories(name)
-        `)
-        .eq('is_active', true);
+        `);
+
+      if (user) {
+        // Show approved active stores for everyone, plus the current user's stores (even if pending approval)
+        storesQuery = storesQuery.or(`and(is_active.eq.true,approved.eq.true),owner_id.eq.${user.id}`);
+      } else {
+        // Public visitors see only approved and active stores
+        storesQuery = storesQuery.eq('is_active', true).eq('approved', true);
+      }
+
+      const { data: storesData, error: storesError } = await storesQuery;
 
       if (storesError) throw storesError;
 
