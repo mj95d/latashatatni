@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
 import {
   Card,
   CardContent,
@@ -157,6 +158,60 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF("p", "mm", "a4");
+    
+    // إضافة العنوان
+    doc.setFontSize(20);
+    doc.text("لا تشتتني - تقرير الإحصائيات", 105, 20, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}`, 105, 30, { align: "center" });
+    
+    // إضافة الإحصائيات
+    let yPosition = 50;
+    doc.setFontSize(14);
+    
+    doc.text(`إجمالي المستخدمين: ${stats.totalUsers.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.text(`إجمالي المتاجر: ${stats.totalStores.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.text(`العروض النشطة: ${stats.totalOffers.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.text(`إجمالي الطلبات: ${stats.totalOrders.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.text(`الاشتراكات النشطة: ${stats.activeSubscriptions.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.text(`طلبات معلقة: ${stats.pendingRequests.toLocaleString("ar-SA")}`, 20, yPosition);
+    yPosition += 20;
+    
+    // توزيع المتاجر حسب المدن
+    if (stats.storesByCity && stats.storesByCity.length > 0) {
+      doc.setFontSize(16);
+      doc.text("توزيع المتاجر حسب المدن", 20, yPosition);
+      yPosition += 10;
+      
+      doc.setFontSize(12);
+      stats.storesByCity.forEach((city: any) => {
+        doc.text(`${city.name}: ${city.value} متجر`, 25, yPosition);
+        yPosition += 8;
+      });
+    }
+    
+    // حفظ PDF
+    doc.save(`تقرير_المنصة_${new Date().toLocaleDateString("ar-SA").replace(/\//g, "-")}.pdf`);
+    
+    toast({
+      title: "تم التصدير بنجاح",
+      description: "تم تصدير التقرير كملف PDF",
+    });
   };
 
   const StatCard = ({
@@ -413,7 +468,7 @@ const Reports = () => {
         <Button onClick={fetchStats} variant="outline">
           تحديث البيانات
         </Button>
-        <Button>
+        <Button onClick={exportToPDF}>
           <FileDown className="ml-2 h-4 w-4" />
           تصدير التقرير (PDF)
         </Button>
