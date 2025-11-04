@@ -132,7 +132,20 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+    addFiles(files);
+  };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const addFiles = (files: File[]) => {
     // Validate file types
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     const invalidFiles = files.filter((f) => !validTypes.includes(f.type));
@@ -141,6 +154,19 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       toast({
         title: "خطأ",
         description: "يُسمح فقط بملفات الصور (JPG, PNG, WEBP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check total limit (max 10 images)
+    const currentCount = selectedFiles.length;
+    const newCount = currentCount + files.length;
+
+    if (newCount > 10) {
+      toast({
+        title: "تحذير",
+        description: `يمكنك رفع حتى 10 صور فقط. لديك ${currentCount} صورة وحاولت إضافة ${files.length} صورة.`,
         variant: "destructive",
       });
       return;
@@ -532,252 +558,323 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
 
       {/* Add Product Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
               إضافة منتج جديد
             </DialogTitle>
             <p className="text-sm text-muted-foreground">
-              سيظهر منتجك مباشرة للعملاء بعد الإضافة
+              أضف منتجك وسيظهر مباشرة للعملاء بدون مراجعة
             </p>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Product Images */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                صور المنتج *
-              </Label>
-              
-              {/* Image Options */}
-              <Card className="p-4 space-y-3 bg-muted/50">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="compression" className="text-sm">
-                    ضغط الصور تلقائياً
+            {/* Section 1: Basic Information */}
+            <Card className="p-6 bg-gradient-to-br from-background to-muted/20">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                المعلومات الأساسية
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-sm font-semibold">
+                    اسم المنتج *
                   </Label>
-                  <Switch
-                    id="compression"
-                    checked={imageOptions.enableCompression}
-                    onCheckedChange={(checked) =>
-                      setImageOptions({ ...imageOptions, enableCompression: checked })
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
                     }
+                    placeholder="مثال: هاتف آيفون 15 برو"
+                    className="mt-1.5"
+                    required
                   />
                 </div>
-                
-                {imageOptions.enableCompression && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">
-                      جودة الضغط: {Math.round(imageOptions.compressionQuality * 100)}%
-                    </Label>
-                    <Slider
-                      value={[imageOptions.compressionQuality]}
-                      onValueChange={([value]) =>
-                        setImageOptions({ ...imageOptions, compressionQuality: value })
-                      }
-                      min={0.5}
-                      max={1}
-                      step={0.1}
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="watermark" className="text-sm">
-                    إضافة علامة مائية
+                <div>
+                  <Label htmlFor="sku" className="text-sm font-semibold">
+                    كود المنتج (SKU)
                   </Label>
-                  <Switch
-                    id="watermark"
-                    checked={imageOptions.enableWatermark}
-                    onCheckedChange={(checked) =>
-                      setImageOptions({ ...imageOptions, enableWatermark: checked })
+                  <Input
+                    id="sku"
+                    value={formData.sku}
+                    onChange={(e) =>
+                      setFormData({ ...formData, sku: e.target.value })
                     }
+                    placeholder="مثال: IPH-15P-256"
+                    className="mt-1.5 font-mono"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    كود فريد للمنتج (سيُنشأ تلقائياً إن ترك فارغاً)
+                  </p>
                 </div>
-              </Card>
-
-              {/* Image Upload Area */}
-              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors">
-                <input
-                  type="file"
-                  id="images"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="images"
-                  className="cursor-pointer flex flex-col items-center gap-2"
-                >
-                  <Upload className="h-10 w-10 text-primary" />
-                  <div>
-                    <p className="font-medium">اضغط لاختيار الصور</p>
-                    <p className="text-sm text-muted-foreground">
-                      أو اسحب الصور هنا (JPG, PNG, WEBP)
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              {/* Image Previews */}
-              {previewUrls.length > 0 && (
-                <div className="grid grid-cols-3 gap-3">
-                  {previewUrls.map((url, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group">
-                      <img
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      {index === 0 && (
-                        <Badge className="absolute bottom-1 left-1 text-xs">
-                          الصورة الرئيسية
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Product Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-base font-semibold">
-                اسم المنتج *
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="مثال: كرسي جلد فاخر"
-                required
-                className="text-base"
-              />
-            </div>
-
-            {/* Product Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-base font-semibold">
-                وصف المنتج
-              </Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="اكتب وصفاً مختصراً للمنتج..."
-                rows={3}
-                className="text-base resize-none"
-              />
-            </div>
-
-            {/* Price Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price" className="text-base font-semibold">
-                  السعر *
-                </Label>
-                <div className="relative">
+                <div>
+                  <Label htmlFor="price" className="text-sm font-semibold">
+                    السعر (ر.س) *
+                  </Label>
                   <Input
                     id="price"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price}
                     onChange={(e) =>
                       setFormData({ ...formData, price: e.target.value })
                     }
                     placeholder="0.00"
+                    className="mt-1.5"
                     required
-                    className="text-base pr-12"
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    ر.س
-                  </span>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="old_price" className="text-base font-semibold">
-                  السعر القديم
-                </Label>
-                <div className="relative">
+                <div>
+                  <Label htmlFor="old_price" className="text-sm font-semibold">
+                    السعر قبل الخصم (اختياري)
+                  </Label>
                   <Input
                     id="old_price"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.old_price}
                     onChange={(e) =>
                       setFormData({ ...formData, old_price: e.target.value })
                     }
                     placeholder="0.00"
-                    className="text-base pr-12"
+                    className="mt-1.5"
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    ر.س
-                  </span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    سيظهر كخصم في بطاقة المنتج
+                  </p>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* SKU */}
-            <div className="space-y-2">
-              <Label htmlFor="sku" className="text-base font-semibold">
-                رقم المنتج (SKU)
-              </Label>
-              <Input
-                id="sku"
-                value={formData.sku}
-                onChange={(e) =>
-                  setFormData({ ...formData, sku: e.target.value })
-                }
-                placeholder="سيتم توليده تلقائياً إذا تركته فارغاً"
-                className="text-base font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                رقم فريد للمنتج يساعدك في تتبع المبيعات والمخزون
-              </p>
-            </div>
+            {/* Section 2: Product Images */}
+            <Card className="p-6 bg-gradient-to-br from-background to-primary/5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-primary" />
+                  صور المنتج *
+                </h3>
+                <Badge variant="outline" className="text-sm">
+                  {selectedFiles.length}/10 صور
+                </Badge>
+              </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-3 pt-4">
+              {/* Drag & Drop Upload Area */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer group"
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="file-upload"
+                  disabled={selectedFiles.length >= 10}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                    <Upload className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="text-lg font-bold mb-2">
+                    اسحب الصور هنا أو اضغط للرفع
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    حتى 10 صور • JPG, PNG, WEBP • الحد الأقصى 5 ميجا لكل صورة
+                  </p>
+                </label>
+              </div>
+
+              {/* Image Previews Grid */}
+              {previewUrls.length > 0 && (
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  {previewUrls.map((url, index) => (
+                    <div
+                      key={index}
+                      className="relative group rounded-xl overflow-hidden border-2 border-muted hover:border-primary transition-colors"
+                    >
+                      <div className="aspect-square">
+                        <img
+                          src={url}
+                          alt={`معاينة ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+
+                      {/* Main Image Badge */}
+                      {index === 0 && (
+                        <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-semibold shadow-lg">
+                          الرئيسية
+                        </div>
+                      )}
+
+                      {/* Image Number */}
+                      <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm text-foreground text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">
+                        {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Image Processing Options */}
+              <Card className="p-4 bg-background/50 backdrop-blur-sm mt-6">
+                <h4 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  إعدادات معالجة الصور
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="compression" className="text-sm font-medium">
+                        ضغط تلقائي للصور
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        تقليل حجم الملف وتسريع التحميل
+                      </p>
+                    </div>
+                    <Switch
+                      id="compression"
+                      checked={imageOptions.enableCompression}
+                      onCheckedChange={(checked) =>
+                        setImageOptions({
+                          ...imageOptions,
+                          enableCompression: checked,
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  {imageOptions.enableCompression && (
+                    <div className="space-y-2 pl-4 border-l-2 border-primary/20">
+                      <Label htmlFor="quality" className="text-xs font-medium">
+                        جودة الصورة: {Math.round(imageOptions.compressionQuality * 100)}%
+                      </Label>
+                      <Slider
+                        id="quality"
+                        min={0.5}
+                        max={1}
+                        step={0.1}
+                        value={[imageOptions.compressionQuality]}
+                        onValueChange={(value) =>
+                          setImageOptions({
+                            ...imageOptions,
+                            compressionQuality: value[0],
+                          })
+                        }
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div>
+                      <Label htmlFor="watermark" className="text-sm font-medium">
+                        علامة مائية باسم المتجر
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        حماية صورك من النسخ
+                      </p>
+                    </div>
+                    <Switch
+                      id="watermark"
+                      checked={imageOptions.enableWatermark}
+                      onCheckedChange={(checked) =>
+                        setImageOptions({
+                          ...imageOptions,
+                          enableWatermark: checked,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </Card>
+            </Card>
+
+            {/* Section 3: Description */}
+            <Card className="p-6 bg-gradient-to-br from-background to-muted/20">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-primary" />
+                وصف المنتج
+              </h3>
+              <div>
+                <Label htmlFor="description" className="text-sm font-semibold">
+                  الوصف التفصيلي
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="اكتب وصفاً تفصيلياً للمنتج... المواصفات، الحالة، المميزات، وأي تفاصيل مهمة للمشتري"
+                  rows={5}
+                  className="mt-1.5 resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  الوصف الواضح والتفصيلي يزيد من فرص البيع
+                </p>
+              </div>
+            </Card>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
-                disabled={uploading}
                 className="flex-1"
+                disabled={uploading}
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
-                disabled={uploading}
-                className="flex-1 gap-2"
+                disabled={uploading || selectedFiles.length === 0}
+                className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     جاري النشر...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
-                    نشر المنتج الآن
+                    <Sparkles className="h-5 w-5" />
+                    نشر المنتج فوراً ✨
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* Info Banner */}
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
+              <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-primary mb-1">
+                  نشر فوري بدون مراجعة
+                </p>
+                <p className="text-muted-foreground">
+                  منتجك سيظهر مباشرة للعملاء فور الضغط على "نشر" لأن متجرك معتمد ✅
+                </p>
+              </div>
             </div>
           </form>
         </DialogContent>
