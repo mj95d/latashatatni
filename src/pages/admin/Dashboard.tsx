@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Store, Tag, TrendingUp, AlertCircle, MapPin, Package } from "lucide-react";
+import { Users, Store, Tag, TrendingUp, AlertCircle, MapPin, Package, MessageCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
@@ -12,7 +12,10 @@ const Dashboard = () => {
     totalProducts: 0,
     pendingRequests: 0,
     totalCities: 0,
-    totalCategories: 0
+    totalCategories: 0,
+    whatsappOrders: 0,
+    newWhatsappOrders: 0,
+    avgResponseTime: 0
   });
 
   useEffect(() => {
@@ -21,17 +24,24 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const [users, stores, offers, products, cities, categories, requests] = await Promise.all([
+      const [users, stores, offers, products, cities, categories, requests, whatsappOrders] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("stores").select("id", { count: "exact", head: true }),
         supabase.from("offers").select("id", { count: "exact", head: true }),
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("cities").select("id", { count: "exact", head: true }),
         supabase.from("categories").select("id", { count: "exact", head: true }),
-        supabase.from("merchant_requests").select("*", { count: "exact" })
+        supabase.from("merchant_requests").select("*", { count: "exact" }),
+        supabase.from("whatsapp_orders").select("*")
       ]);
 
       const pendingCount = requests.data?.filter(r => r.status === "pending").length || 0;
+      const newWhatsappCount = whatsappOrders.data?.filter(o => o.status === "NEW").length || 0;
+      
+      const completedOrders = whatsappOrders.data?.filter(o => o.response_time_minutes !== null) || [];
+      const avgTime = completedOrders.length > 0
+        ? completedOrders.reduce((sum, o) => sum + (o.response_time_minutes || 0), 0) / completedOrders.length
+        : 0;
 
       setStats({
         totalUsers: users.count || 0,
@@ -40,7 +50,10 @@ const Dashboard = () => {
         totalProducts: products.count || 0,
         pendingRequests: pendingCount,
         totalCities: cities.count || 0,
-        totalCategories: categories.count || 0
+        totalCategories: categories.count || 0,
+        whatsappOrders: whatsappOrders.data?.length || 0,
+        newWhatsappOrders: newWhatsappCount,
+        avgResponseTime: Math.round(avgTime)
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -52,8 +65,11 @@ const Dashboard = () => {
     { title: "إجمالي المتاجر", value: stats.totalStores, icon: Store, color: "text-green-500" },
     { title: "إجمالي العروض", value: stats.totalOffers, icon: Tag, color: "text-orange-500" },
     { title: "إجمالي المنتجات", value: stats.totalProducts, icon: Package, color: "text-purple-500" },
+    { title: "طلبات الواتساب", value: stats.whatsappOrders, icon: MessageCircle, color: "text-cyan-500" },
+    { title: "طلبات واتساب جديدة", value: stats.newWhatsappOrders, icon: AlertCircle, color: "text-yellow-500" },
+    { title: "متوسط وقت الاستجابة", value: `${stats.avgResponseTime} د`, icon: Clock, color: "text-indigo-500" },
     { title: "طلبات التجار المعلقة", value: stats.pendingRequests, icon: AlertCircle, color: "text-red-500" },
-    { title: "عدد المدن", value: stats.totalCities, icon: MapPin, color: "text-indigo-500" },
+    { title: "عدد المدن", value: stats.totalCities, icon: MapPin, color: "text-teal-500" },
   ];
 
   return (

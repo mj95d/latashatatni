@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Star, Clock, Store, Tag, Phone, Map } from "lucide-react";
+import { MapPin, Star, Clock, Store, Tag, Phone, Map, MessageSquare } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -450,14 +450,29 @@ const Stores = () => {
                         )}
                         {store.phone && (
                           <Button 
-                            asChild
+                            onClick={async () => {
+                              const { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP } = await import("@/lib/whatsapp");
+                              const { supabase } = await import("@/integrations/supabase/client");
+                              
+                              const message = buildWhatsAppMessage({
+                                storeName: store.name
+                              });
+                              
+                              // تسجيل الطلب
+                              await supabase.from("whatsapp_orders").insert({
+                                store_id: store.id,
+                                customer_message: message,
+                                source_page: "stores_list",
+                                user_agent: navigator.userAgent
+                              });
+                              
+                              window.open(buildWhatsAppLink(PLATFORM_WHATSAPP, message), '_blank');
+                            }}
                             variant="outline" 
                             className="w-full border-2"
                           >
-                            <a href={`tel:${store.phone}`} aria-label={`اتصال بـ ${store.name}`}>
-                              <Phone className="w-4 h-4 ml-1" />
-                              اتصال
-                            </a>
+                            <MessageSquare className="w-4 h-4 ml-1" />
+                            واتساب
                           </Button>
                         )}
                       </div>
