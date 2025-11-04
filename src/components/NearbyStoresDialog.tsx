@@ -217,17 +217,15 @@ export default function NearbyStoresDialog({
                         <Navigation className="w-4 h-4 ml-1" />
                         المسار
                       </Button>
-                      {store.phone && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="w-full border-2"
-                          onClick={() => window.open(`tel:${store.phone}`, '_self')}
-                        >
-                          <Phone className="w-4 h-4 ml-1" />
-                          اتصال
-                        </Button>
-                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="w-full border-2"
+                        onClick={() => window.open(`tel:+966532402020`, '_self')}
+                      >
+                        <Phone className="w-4 h-4 ml-1" />
+                        اتصال
+                      </Button>
                     </div>
                   </div>
                 </Card>

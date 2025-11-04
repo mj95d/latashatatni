@@ -148,8 +148,8 @@ const Footer = () => {
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-smooth">
                   <Phone className="w-5 h-5 text-primary" />
                 </div>
-                <a href={`tel:${settings.contact_phone || "+966500000000"}`} className="hover:text-primary transition-smooth" dir="ltr">
-                  {settings.contact_phone || "+966 50 000 0000"}
+                <a href="tel:+966532402020" className="hover:text-primary transition-smooth" dir="ltr">
+                  +966 53 240 2020
                 </a>
               </li>
               {settings.support_phone && (

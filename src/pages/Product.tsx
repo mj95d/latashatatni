@@ -413,17 +413,15 @@ const Product = () => {
             </div>
 
             {/* Contact Store */}
-            {product.stores?.phone && (
-              <Button
-                onClick={() => window.open(`tel:${product.stores?.phone}`, '_self')}
-                variant="outline"
-                className="w-full py-6"
-                size="lg"
-              >
-                <Phone className="w-5 h-5 ml-2" />
-                اتصل بالمتجر مباشرة
-              </Button>
-            )}
+            <Button
+              onClick={() => window.open(`tel:+966532402020`, '_self')}
+              variant="outline"
+              className="w-full py-6"
+              size="lg"
+            >
+              <Phone className="w-5 h-5 ml-2" />
+              اتصل بالمتجر مباشرة
+            </Button>
 
             {/* Store Address */}
             {product.stores?.address && (

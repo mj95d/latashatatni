@@ -51,8 +51,10 @@ export const OfferDetailsDialog = ({ offer, open, onOpenChange }: OfferDetailsDi
   const endDate = offer.end_date ? new Date(offer.end_date) : null;
 
   const handleWhatsAppClick = async () => {
-    const { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP } = await import("@/lib/whatsapp");
+    const { buildWhatsAppMessage, buildWhatsAppLink } = await import("@/lib/whatsapp");
     const { supabase } = await import("@/integrations/supabase/client");
+    
+    const PLATFORM_PHONE = "+966532402020"; // رقم المنصة الموحد
     
     const message = buildWhatsAppMessage({
       storeName: offer.stores?.name || "متجر",
@@ -73,7 +75,7 @@ export const OfferDetailsDialog = ({ offer, open, onOpenChange }: OfferDetailsDi
     }
     
     // فتح واتساب
-    window.open(buildWhatsAppLink(PLATFORM_WHATSAPP, message), '_blank');
+    window.open(buildWhatsAppLink(PLATFORM_PHONE, message), '_blank');
   };
 
   return (
@@ -185,19 +187,16 @@ export const OfferDetailsDialog = ({ offer, open, onOpenChange }: OfferDetailsDi
               className="flex-1" 
               size="lg"
               onClick={handleWhatsAppClick}
-              disabled={!offer.stores?.whatsapp && !offer.stores?.phone}
             >
               تواصل عبر واتساب
             </Button>
-            {offer.stores?.phone && (
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => window.open(`tel:${offer.stores?.phone}`, '_self')}
-              >
-                اتصل الآن
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => window.open(`tel:+966532402020`, '_self')}
+            >
+              اتصل الآن
+            </Button>
           </div>
         </div>
       </DialogContent>

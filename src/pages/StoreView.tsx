@@ -126,16 +126,8 @@ const StoreView = () => {
   const handleWhatsAppContact = async () => {
     if (!store) return;
 
-    const phone = store.whatsapp || store.phone || "";
-    if (!phone) {
-      showToast({
-        title: "تحذير",
-        description: "رقم الواتساب غير متوفر لهذا المتجر",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    const PLATFORM_PHONE = "+966532402020"; // رقم المنصة الموحد
+    
     const message = `مرحباً، أرغب في الاستفسار عن متجر ${store.name}`;
     
     try {
@@ -148,7 +140,7 @@ const StoreView = () => {
         status: 'NEW'
       });
 
-      const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/${PLATFORM_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
       
       showToast({
@@ -158,7 +150,7 @@ const StoreView = () => {
     } catch (error: any) {
       console.error("Error logging whatsapp contact:", error);
       // فتح واتساب حتى لو فشل التسجيل
-      const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/${PLATFORM_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
     }
   };
@@ -284,16 +276,14 @@ const StoreView = () => {
               )}
 
               {/* Contact Button */}
-              {(store.whatsapp || store.phone) && (
-                <Button
-                  onClick={handleWhatsAppContact}
-                  className="w-full md:w-auto"
-                  size="lg"
-                >
-                  <MessageSquare className="w-5 h-5 ml-2" />
-                  تواصل عبر واتساب
-                </Button>
-              )}
+              <Button
+                onClick={handleWhatsAppContact}
+                className="w-full md:w-auto"
+                size="lg"
+              >
+                <MessageSquare className="w-5 h-5 ml-2" />
+                تواصل عبر واتساب
+              </Button>
             </div>
           </div>
         </Card>

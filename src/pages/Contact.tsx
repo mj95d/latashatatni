@@ -92,11 +92,11 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold text-lg mb-1">الهاتف</h3>
                     <a 
-                      href="tel:+966500000000" 
+                      href="tel:+966532402020" 
                       className="text-muted-foreground hover:text-primary transition-smooth"
                       dir="ltr"
                     >
-                      +966 50 000 0000
+                      +966 53 240 2020
                     </a>
                   </div>
                 </div>

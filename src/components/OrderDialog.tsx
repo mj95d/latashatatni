@@ -83,7 +83,7 @@ export const OrderDialog = ({
 
   const handleWhatsApp = () => {
     const message = `مرحباً، أرغب بطلب ${offerTitle || "منتج"} من متجر ${storeName || ""}`;
-    const phone = "966500000000"; // رقم واتساب المتجر
+    const phone = "966532402020"; // رقم واتساب المنصة الموحد
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 

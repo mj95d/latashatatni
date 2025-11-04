@@ -81,7 +81,7 @@ export default function StoresMap({ stores }: StoresMapProps) {
             ${store.phone ? `
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.875rem;">
                 <span>📞</span>
-                <a href="tel:${store.phone}" style="color: #3b82f6; text-decoration: none;">${store.phone}</a>
+                <a href="tel:+966532402020" style="color: #3b82f6; text-decoration: none;">+966532402020</a>
               </div>
             ` : ''}
             ${store.rating ? `
