@@ -16,6 +16,8 @@ import { AddStoreDialog } from "@/components/AddStoreDialog";
 import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
 import { ProductsManager } from "@/components/merchant/ProductsManager";
+import { StoresGrid } from "@/components/merchant/StoresGrid";
+import { MerchantStats } from "@/components/merchant/MerchantStats";
 import MapPicker from "@/components/MapPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -30,6 +32,7 @@ const Merchant = () => {
   const [stores, setStores] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
+  const [currentUserId, setCurrentUserId] = useState<string>("");
   const [formData, setFormData] = useState({
     business_name: "",
     business_description: "",
@@ -46,6 +49,13 @@ const Merchant = () => {
   const [documentFile, setDocumentFile] = useState<File | null>(null);
 
   useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+    getCurrentUser();
     checkMerchantRequest();
     if (userRole === 'merchant') {
       fetchStores();
@@ -396,65 +406,20 @@ const Merchant = () => {
           <SubscriptionAlert />
           
           <div className="text-center mb-12 space-y-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4 shadow-glow">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-4 shadow-xl">
               <Store className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text">
               لوحة تحكم التاجر
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              إدارة متاجرك وعروضك بكل سهولة
+              إدارة متاجرك ومنتجاتك وعروضك بكل سهولة واحترافية
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">المتاجر</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">العروض النشطة</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">قيد المراجعة</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-all hover:scale-105">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">إجمالي المشاهدات</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-            </Card>
+          {/* Stats Cards */}
+          <div className="mb-12">
+            {currentUserId && <MerchantStats userId={currentUserId} />}
           </div>
 
           <Tabs defaultValue="stores" className="max-w-6xl mx-auto">
@@ -479,27 +444,32 @@ const Merchant = () => {
 
             <TabsContent value="stores" className="mt-8">
               <Card className="p-8 border-2">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold">متاجرك</h3>
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">متاجرك</h3>
+                    <p className="text-muted-foreground">
+                      {stores.length} {stores.length === 1 ? 'متجر' : 'متاجر'}
+                    </p>
+                  </div>
                   <Button 
                     size="lg" 
-                    className="shadow-glow"
+                    className="shadow-lg hover:shadow-xl transition-all gap-2"
                     onClick={() => setShowAddStoreDialog(true)}
                   >
-                    <Store className="w-4 h-4 ml-2" />
+                    <Store className="w-4 h-4" />
                     إضافة متجر جديد
                   </Button>
                 </div>
-                <div className="text-center py-16">
-                  <Store className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
-                  <h4 className="text-xl font-semibold mb-3">لا توجد متاجر حالياً</h4>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    ابدأ بإضافة متجرك الأول وعرض منتجاتك للعملاء
-                  </p>
-                  <Button onClick={() => navigate("/stores")} variant="outline" size="lg">
-                    تصفح المتاجر
-                  </Button>
-                </div>
+                
+                <StoresGrid 
+                  stores={stores} 
+                  onStoreSelect={(storeId) => {
+                    setSelectedStoreId(storeId);
+                    // Switch to products tab
+                    const productsTab = document.querySelector('[value="products"]') as HTMLElement;
+                    productsTab?.click();
+                  }}
+                />
               </Card>
             </TabsContent>
 
@@ -674,13 +644,31 @@ const Merchant = () => {
           open={showAddStoreDialog}
           onOpenChange={setShowAddStoreDialog}
           onSuccess={() => {
-            // Reload stores or update state
+            fetchStores(); // Reload stores
+            setShowAddStoreDialog(false);
             toast({
-              title: "تم بنجاح",
+              title: "✅ تم بنجاح",
               description: "تم إضافة المتجر بنجاح"
             });
           }}
         />
+
+        {/* Add Offer Dialog */}
+        {selectedStoreId && (
+          <AddOfferDialog
+            open={showAddOfferDialog}
+            onOpenChange={setShowAddOfferDialog}
+            storeId={selectedStoreId || stores[0]?.id}
+            onSuccess={() => {
+              fetchOffers(); // Reload offers
+              setShowAddOfferDialog(false);
+              toast({
+                title: "✅ تم بنجاح",
+                description: "تم إضافة العرض بنجاح"
+              });
+            }}
+          />
+        )}
       </div>
     );
   }
