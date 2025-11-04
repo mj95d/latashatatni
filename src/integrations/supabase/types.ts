@@ -539,6 +539,7 @@ export type Database = {
       stores: {
         Row: {
           address: string | null
+          approved: boolean
           category_id: string | null
           city_id: string | null
           commercial_document: string | null
@@ -566,6 +567,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          approved?: boolean
           category_id?: string | null
           city_id?: string | null
           commercial_document?: string | null
@@ -593,6 +595,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          approved?: boolean
           category_id?: string | null
           city_id?: string | null
           commercial_document?: string | null
