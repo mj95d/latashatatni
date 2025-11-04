@@ -18,6 +18,7 @@ import {
   XCircle,
   Clock,
   Percent,
+  Edit,
 } from "lucide-react";
 import {
   Table,
@@ -42,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EditOfferDialog } from "@/components/EditOfferDialog";
 
 interface Offer {
   id: string;
@@ -68,6 +70,8 @@ const AdminOffers = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStore, setFilterStore] = useState<string>("all");
   const [stores, setStores] = useState<any[]>([]);
+  const [showEditOfferDialog, setShowEditOfferDialog] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState<string>("");
 
   useEffect(() => {
     fetchOffers();
@@ -387,6 +391,16 @@ const AdminOffers = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditingOfferId(offer.id);
+                            setShowEditOfferDialog(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4 ml-2" />
+                          تعديل العرض
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {!isOfferExpired(offer.end_date) && (
                           <DropdownMenuItem
                             onClick={() => handleToggleActive(offer.id, offer.is_active)}
@@ -421,6 +435,24 @@ const AdminOffers = () => {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Edit Offer Dialog */}
+      {editingOfferId && (
+        <EditOfferDialog
+          open={showEditOfferDialog}
+          onOpenChange={setShowEditOfferDialog}
+          offerId={editingOfferId}
+          onSuccess={() => {
+            fetchOffers();
+            setShowEditOfferDialog(false);
+            setEditingOfferId("");
+            toast({
+              title: "✅ تم التحديث",
+              description: "تم تحديث العرض بنجاح"
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

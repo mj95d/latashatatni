@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone, MapPin, Package, Tag, TrendingUp } from "lucide-react";
+import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone, MapPin, Package, Tag, TrendingUp, Edit, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
 import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
+import { EditOfferDialog } from "@/components/EditOfferDialog";
 import { ProductsManager } from "@/components/merchant/ProductsManager";
 import { StoresGrid } from "@/components/merchant/StoresGrid";
 import { MerchantStats } from "@/components/merchant/MerchantStats";
@@ -29,6 +30,8 @@ const Merchant = () => {
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [showAddStoreDialog, setShowAddStoreDialog] = useState(false);
   const [showAddOfferDialog, setShowAddOfferDialog] = useState(false);
+  const [showEditOfferDialog, setShowEditOfferDialog] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState<string>("");
   const [stores, setStores] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
@@ -181,6 +184,35 @@ const Merchant = () => {
       }
     } catch (error) {
       console.error("Error:", error);
+    }
+  };
+
+  const handleDeleteOffer = async (offerId: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا العرض؟")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("offers")
+        .delete()
+        .eq("id", offerId);
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ تم الحذف",
+        description: "تم حذف العرض بنجاح"
+      });
+
+      fetchOffers();
+    } catch (error: any) {
+      console.error("Error deleting offer:", error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل حذف العرض",
+        variant: "destructive"
+      });
     }
   };
 
@@ -581,7 +613,7 @@ const Merchant = () => {
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {offers.map((offer) => (
-                      <Card key={offer.id} className="overflow-hidden">
+                      <Card key={offer.id} className="overflow-hidden group hover:shadow-lg transition-all">
                         <div className="relative h-48">
                           <img
                             src={
@@ -593,6 +625,29 @@ const Merchant = () => {
                             alt={offer.title}
                             className="w-full h-full object-cover"
                           />
+                          
+                          {/* Edit and Delete Buttons */}
+                          <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="icon"
+                              variant="secondary"
+                              onClick={() => {
+                                setEditingOfferId(offer.id);
+                                setShowEditOfferDialog(true);
+                              }}
+                              className="h-8 w-8 bg-white/90 hover:bg-white"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="destructive"
+                              onClick={() => handleDeleteOffer(offer.id)}
+                              className="h-8 w-8"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="p-4">
                           <h4 className="font-bold text-lg mb-2 line-clamp-1">{offer.title}</h4>
@@ -790,6 +845,24 @@ const Merchant = () => {
               toast({
                 title: "✅ تم بنجاح",
                 description: "تم إضافة العرض بنجاح"
+              });
+            }}
+          />
+        )}
+
+        {/* Edit Offer Dialog */}
+        {editingOfferId && (
+          <EditOfferDialog
+            open={showEditOfferDialog}
+            onOpenChange={setShowEditOfferDialog}
+            offerId={editingOfferId}
+            onSuccess={() => {
+              fetchOffers(); // Reload offers
+              setShowEditOfferDialog(false);
+              setEditingOfferId("");
+              toast({
+                title: "✅ تم التحديث",
+                description: "تم تحديث العرض بنجاح"
               });
             }}
           />
