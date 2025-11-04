@@ -422,35 +422,41 @@ const Merchant = () => {
             {currentUserId && <MerchantStats userId={currentUserId} />}
           </div>
 
-          <Tabs defaultValue="stores" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-16 mb-8 bg-gradient-to-r from-muted/50 to-muted/30 p-1.5 rounded-xl border-2">
+          <Tabs defaultValue="stores" className="w-full" dir="rtl">
+            <TabsList className="grid w-full grid-cols-4 h-auto mb-8 bg-card/80 backdrop-blur-sm p-2 rounded-2xl border-2 shadow-lg">
               <TabsTrigger 
                 value="stores" 
-                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+                className="flex flex-col gap-2 h-auto py-4 text-base font-bold data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary-glow data-[state=active]:text-white rounded-xl transition-all duration-300 data-[state=active]:shadow-xl data-[state=active]:scale-105"
               >
-                <Store className="w-5 h-5 ml-2" />
-                متاجري ({stores.length})
+                <Store className="w-6 h-6" />
+                <div className="flex flex-col items-center">
+                  <span>متاجري</span>
+                  <span className="text-xs opacity-80">({stores.length})</span>
+                </div>
               </TabsTrigger>
               <TabsTrigger 
                 value="products" 
-                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+                className="flex flex-col gap-2 h-auto py-4 text-base font-bold data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary-glow data-[state=active]:text-white rounded-xl transition-all duration-300 data-[state=active]:shadow-xl data-[state=active]:scale-105"
               >
-                <Package className="w-5 h-5 ml-2" />
-                منتجاتي
+                <Package className="w-6 h-6" />
+                <span>منتجاتي</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="offers" 
-                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+                className="flex flex-col gap-2 h-auto py-4 text-base font-bold data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary-glow data-[state=active]:text-white rounded-xl transition-all duration-300 data-[state=active]:shadow-xl data-[state=active]:scale-105"
               >
-                <Tag className="w-5 h-5 ml-2" />
-                عروضي ({offers.length})
+                <Tag className="w-6 h-6" />
+                <div className="flex flex-col items-center">
+                  <span>عروضي</span>
+                  <span className="text-xs opacity-80">({offers.length})</span>
+                </div>
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
-                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+                className="flex flex-col gap-2 h-auto py-4 text-base font-bold data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary-glow data-[state=active]:text-white rounded-xl transition-all duration-300 data-[state=active]:shadow-xl data-[state=active]:scale-105"
               >
-                <TrendingUp className="w-5 h-5 ml-2" />
-                الإحصائيات
+                <TrendingUp className="w-6 h-6" />
+                <span>الإحصائيات</span>
               </TabsTrigger>
             </TabsList>
 
@@ -610,23 +616,127 @@ const Merchant = () => {
 
             <TabsContent value="analytics" className="mt-8">
               <Card className="p-8 border-2">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold mb-2">الإحصائيات</h3>
-                  <p className="text-muted-foreground">تتبع أداء متاجرك وعروضك</p>
+                <div className="mb-8">
+                  <h3 className="text-3xl font-bold mb-3 bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent">
+                    الإحصائيات والتحليلات
+                  </h3>
+                  <p className="text-muted-foreground text-lg">تتبع أداء متاجرك ومنتجاتك وعروضك</p>
                 </div>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {/* إجمالي المتاجر */}
+                  <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                        <Store className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {stores.length}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-lg text-foreground">متاجرك النشطة</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {stores.filter(s => s.is_active).length} متجر نشط
+                    </p>
+                  </Card>
+
+                  {/* إجمالي العروض */}
+                  <Card className="p-6 bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-12 w-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                        <Tag className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      </div>
+                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {offers.length}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-lg text-foreground">عروضك الحالية</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {offers.filter(o => o.is_active).length} عرض نشط
+                    </p>
+                  </Card>
+
+                  {/* معدل التقييمات */}
+                  <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-12 w-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+                        {stores.length > 0 
+                          ? (stores.reduce((acc, s) => acc + (s.rating || 0), 0) / stores.length).toFixed(1)
+                          : '0.0'
+                        }
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-lg text-foreground">متوسط التقييم</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      من {stores.reduce((acc, s) => acc + (s.reviews_count || 0), 0)} تقييم
+                    </p>
+                  </Card>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-6 bg-muted/50 rounded-lg">
-                    <h4 className="font-semibold mb-4">المشاهدات الأسبوعية</h4>
-                    <div className="h-40 flex items-center justify-center text-muted-foreground">
-                      لا توجد بيانات كافية
+                  {/* حالة المتاجر */}
+                  <Card className="p-6 bg-muted/30 border-2">
+                    <h4 className="font-bold text-xl mb-6 flex items-center gap-2">
+                      <Store className="w-5 h-5 text-primary" />
+                      حالة المتاجر
+                    </h4>
+                    <div className="space-y-4">
+                      {stores.length > 0 ? (
+                        stores.map((store) => (
+                          <div key={store.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-2 h-2 rounded-full ${store.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                              <span className="font-semibold">{store.name}</span>
+                            </div>
+                            <span className={`text-sm px-3 py-1 rounded-full ${
+                              store.approved 
+                                ? 'bg-green-500/20 text-green-700 dark:text-green-400' 
+                                : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                            }`}>
+                              {store.approved ? 'معتمد ✓' : 'قيد المراجعة'}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          لا توجد متاجر بعد
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="p-6 bg-muted/50 rounded-lg">
-                    <h4 className="font-semibold mb-4">العروض الأكثر شعبية</h4>
-                    <div className="h-40 flex items-center justify-center text-muted-foreground">
-                      لا توجد بيانات كافية
-                    </div>
-                  </div>
+                  </Card>
+
+                  {/* نصائح وتوصيات */}
+                  <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                    <h4 className="font-bold text-xl mb-6 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      نصائح لزيادة المبيعات
+                    </h4>
+                    <ul className="space-y-3">
+                      <li className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>أضف صوراً احترافية وواضحة لمنتجاتك</span>
+                      </li>
+                      <li className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>حدّث عروضك بشكل منتظم لجذب العملاء</span>
+                      </li>
+                      <li className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>استخدم وصف تفصيلي يوضح مميزات المنتج</span>
+                      </li>
+                      <li className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>رد على استفسارات العملاء بسرعة واحترافية</span>
+                      </li>
+                      <li className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>استفد من ميزة المنتجات المميزة لزيادة الظهور</span>
+                      </li>
+                    </ul>
+                  </Card>
                 </div>
               </Card>
             </TabsContent>
