@@ -822,40 +822,58 @@ export type Database = {
       }
       whatsapp_orders: {
         Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          completed_at: string | null
           created_at: string | null
           customer_message: string
           customer_name: string | null
           customer_phone: string | null
+          delivery_method: string | null
           id: string
+          neighborhood: string | null
           offer_id: string | null
+          response_time_minutes: number | null
           source_page: string
-          status: string
+          status: Database["public"]["Enums"]["order_status"]
           store_id: string | null
           updated_at: string | null
           user_agent: string | null
         }
         Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           customer_message: string
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_method?: string | null
           id?: string
+          neighborhood?: string | null
           offer_id?: string | null
+          response_time_minutes?: number | null
           source_page: string
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           store_id?: string | null
           updated_at?: string | null
           user_agent?: string | null
         }
         Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           customer_message?: string
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_method?: string | null
           id?: string
+          neighborhood?: string | null
           offer_id?: string | null
+          response_time_minutes?: number | null
           source_page?: string
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           store_id?: string | null
           updated_at?: string | null
           user_agent?: string | null
@@ -892,6 +910,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "merchant" | "user"
+      order_status: "NEW" | "IN_PROGRESS" | "DONE" | "CANCELED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1020,6 +1039,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "merchant", "user"],
+      order_status: ["NEW", "IN_PROGRESS", "DONE", "CANCELED"],
     },
   },
 } as const
