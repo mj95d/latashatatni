@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
   CheckCircle,
   XCircle,
   Image as ImageIcon,
+  ExternalLink,
 } from "lucide-react";
 import {
   Table,
@@ -60,6 +62,7 @@ interface Product {
 }
 
 const Products = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -377,6 +380,13 @@ const Products = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => window.open(`/product/${product.id}`, '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                          عرض المنتج
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => handleToggleActive(product.id, product.is_active)}
