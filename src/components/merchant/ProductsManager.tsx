@@ -23,6 +23,7 @@ import {
   Camera,
   Shield,
   Clock,
+  Edit,
 } from "lucide-react";
 import {
   Dialog,
@@ -58,6 +59,8 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -246,7 +249,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       return;
     }
 
-    if (selectedFiles.length === 0) {
+    if (selectedFiles.length === 0 && previewUrls.length === 0) {
       toast({
         title: "خطأ",
         description: "يرجى إضافة صورة واحدة على الأقل للمنتج",
@@ -258,51 +261,58 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     setUploading(true);
 
     try {
-      // Upload images
-      const imageUrls = await uploadImages();
+      // Upload new images if any
+      let imageUrls = [...previewUrls]; // Keep existing images
+      if (selectedFiles.length > 0) {
+        const newImageUrls = await uploadImages();
+        imageUrls = [...imageUrls, ...newImageUrls];
+      }
 
-      // Generate SKU if not provided
-      const productSku = formData.sku.trim() || generateSKU();
+      const productData = {
+        name: formData.name,
+        description: formData.description || null,
+        price: parseFloat(formData.price),
+        old_price: formData.old_price ? parseFloat(formData.old_price) : null,
+        sku: formData.sku.trim() || (isEditMode ? undefined : generateSKU()),
+        images: imageUrls,
+        category: formData.category || null,
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        is_featured: formData.is_featured,
+      };
 
-      // Insert product - is_active is true by default in database
-      const { data, error } = await supabase
-        .from("products")
-        .insert({
-          store_id: storeId,
-          name: formData.name,
-          description: formData.description || null,
-          price: parseFloat(formData.price),
-          old_price: formData.old_price ? parseFloat(formData.old_price) : null,
-          sku: productSku,
-          images: imageUrls,
-          is_active: true,
-          category: formData.category || null,
-          stock_quantity: parseInt(formData.stock_quantity) || 0,
-          is_featured: formData.is_featured,
-        })
-        .select()
-        .single();
+      if (isEditMode && editingProductId) {
+        // Update existing product
+        const { error } = await supabase
+          .from("products")
+          .update(productData)
+          .eq("id", editingProductId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "✅ تم نشر المنتج",
-        description: `تم إضافة "${formData.name}" وهو الآن متاح للعملاء مباشرة!`,
-      });
+        toast({
+          title: "✅ تم التحديث",
+          description: `تم تحديث "${formData.name}" بنجاح`,
+        });
+      } else {
+        // Insert new product
+        const { error } = await supabase
+          .from("products")
+          .insert({
+            ...productData,
+            store_id: storeId,
+            is_active: true,
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "✅ تم نشر المنتج",
+          description: `تم إضافة "${formData.name}" وهو الآن متاح للعملاء مباشرة!`,
+        });
+      }
 
       // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        old_price: "",
-        sku: "",
-        category: "",
-        stock_quantity: "0",
-        is_featured: false,
-      });
-      setSelectedFiles([]);
-      setPreviewUrls([]);
+      resetForm();
       setIsDialogOpen(false);
 
       // Refresh products list
@@ -371,6 +381,28 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     }
   };
 
+  const editProduct = (product: Product) => {
+    setIsEditMode(true);
+    setEditingProductId(product.id);
+    setFormData({
+      name: product.name,
+      description: product.description || "",
+      price: product.price.toString(),
+      old_price: product.old_price?.toString() || "",
+      sku: product.sku || "",
+      category: product.category || "",
+      stock_quantity: product.stock_quantity.toString(),
+      is_featured: product.is_featured,
+    });
+    
+    // Set existing images
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      setPreviewUrls(product.images);
+    }
+    
+    setIsDialogOpen(true);
+  };
+
   const copySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
     setCopiedSku(sku);
@@ -379,6 +411,23 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       title: "تم النسخ",
       description: "تم نسخ رقم المنتج",
     });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      old_price: "",
+      sku: "",
+      category: "",
+      stock_quantity: "0",
+      is_featured: false,
+    });
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+    setIsEditMode(false);
+    setEditingProductId(null);
   };
 
   return (
@@ -539,19 +588,21 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => editProduct(product)}
                     className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 ml-2" />
+                    تعديل
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => toggleProductStatus(product.id, product.is_active)}
                   >
                     {product.is_active ? (
-                      <>
-                        <EyeOff className="h-4 w-4 ml-2" />
-                        إخفاء
-                      </>
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <>
-                        <Eye className="h-4 w-4 ml-2" />
-                        إظهار
-                      </>
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                   <Button
@@ -569,15 +620,20 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       )}
 
       {/* Add Product Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
-              إضافة منتج جديد
+              {isEditMode ? "تعديل المنتج" : "إضافة منتج جديد"}
             </DialogTitle>
             <p className="text-sm text-muted-foreground">
-              أضف منتجك وسيظهر مباشرة للعملاء بدون مراجعة
+              {isEditMode 
+                ? "عدّل بيانات منتجك" 
+                : "أضف منتجك وسيظهر مباشرة للعملاء بدون مراجعة"}
             </p>
           </DialogHeader>
 
@@ -900,7 +956,10 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  resetForm();
+                }}
                 className="flex-1"
                 disabled={uploading}
               >
@@ -908,18 +967,18 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
               </Button>
               <Button
                 type="submit"
-                disabled={uploading || selectedFiles.length === 0}
+                disabled={uploading || (selectedFiles.length === 0 && previewUrls.length === 0)}
                 className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
               >
                 {uploading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    جاري النشر...
+                    {isEditMode ? "جاري التحديث..." : "جاري النشر..."}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-5 w-5" />
-                    نشر المنتج فوراً ✨
+                    {isEditMode ? "حفظ التعديلات" : "نشر المنتج فوراً ✨"}
                   </>
                 )}
               </Button>
