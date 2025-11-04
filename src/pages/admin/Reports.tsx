@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Calendar,
   Loader2,
+  FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 interface Stats {
   totalUsers: number;
@@ -35,6 +51,9 @@ interface Stats {
   totalOrders: number;
   activeSubscriptions: number;
   pendingRequests: number;
+  chartData?: any[];
+  storesByCity?: any[];
+  ordersTimeline?: any[];
 }
 
 const Reports = () => {
@@ -45,6 +64,9 @@ const Reports = () => {
     totalOrders: 0,
     activeSubscriptions: 0,
     pendingRequests: 0,
+    chartData: [],
+    storesByCity: [],
+    ordersTimeline: [],
   });
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("all");
@@ -91,6 +113,31 @@ const Reports = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
+      // جلب بيانات المتاجر حسب المدن للرسم البياني
+      const { data: storesData } = await supabase
+        .from("stores")
+        .select("city_id, cities(name)")
+        .eq("is_active", true);
+
+      const cityStats = storesData?.reduce((acc: any, store: any) => {
+        const cityName = store.cities?.name || "غير محدد";
+        acc[cityName] = (acc[cityName] || 0) + 1;
+        return acc;
+      }, {});
+
+      const storesByCity = Object.entries(cityStats || {}).map(([name, value]) => ({
+        name,
+        value,
+      }));
+
+      // بيانات عامة للمخططات
+      const chartData = [
+        { name: "المستخدمين", value: usersCount || 0 },
+        { name: "المتاجر", value: storesCount || 0 },
+        { name: "العروض", value: offersCount || 0 },
+        { name: "الطلبات", value: ordersCount || 0 },
+      ];
+
       setStats({
         totalUsers: usersCount || 0,
         totalStores: storesCount || 0,
@@ -98,6 +145,8 @@ const Reports = () => {
         totalOrders: ordersCount || 0,
         activeSubscriptions: subsCount || 0,
         pendingRequests: requestsCount || 0,
+        chartData,
+        storesByCity,
       });
     } catch (error: any) {
       toast({
@@ -221,23 +270,61 @@ const Reports = () => {
             />
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>رسم بياني للأداء</CardTitle>
-              <CardDescription>
-                تحليل الأداء العام للمنصة خلال الفترة المحددة
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px] flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>الرسوم البيانية التفصيلية قريباً</p>
-                <p className="text-sm mt-2">
-                  يمكن دمج مكتبة مثل Recharts للحصول على تقارير مرئية متقدمة
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>رسم بياني للأداء العام</CardTitle>
+                <CardDescription>
+                  مقارنة الإحصائيات الرئيسية للمنصة
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>توزيع المتاجر حسب المدن</CardTitle>
+                <CardDescription>
+                  عدد المتاجر النشطة في كل مدينة
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.storesByCity}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      outerRadius={80}
+                      fill="hsl(var(--primary))"
+                      dataKey="value"
+                    >
+                      {stats.storesByCity?.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={`hsl(${(index * 45) % 360}, 70%, 50%)`}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
@@ -322,11 +409,14 @@ const Reports = () => {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={fetchStats}>
+      <div className="flex justify-start gap-2" dir="rtl">
+        <Button onClick={fetchStats} variant="outline">
           تحديث البيانات
         </Button>
-        <Button>تصدير التقرير (PDF)</Button>
+        <Button>
+          <FileDown className="ml-2 h-4 w-4" />
+          تصدير التقرير (PDF)
+        </Button>
       </div>
     </div>
   );
