@@ -833,6 +833,7 @@ export type Database = {
           id: string
           neighborhood: string | null
           offer_id: string | null
+          product_id: string | null
           response_time_minutes: number | null
           source_page: string
           status: Database["public"]["Enums"]["order_status"]
@@ -852,6 +853,7 @@ export type Database = {
           id?: string
           neighborhood?: string | null
           offer_id?: string | null
+          product_id?: string | null
           response_time_minutes?: number | null
           source_page: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -871,6 +873,7 @@ export type Database = {
           id?: string
           neighborhood?: string | null
           offer_id?: string | null
+          product_id?: string | null
           response_time_minutes?: number | null
           source_page?: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -884,6 +887,13 @@ export type Database = {
             columns: ["offer_id"]
             isOneToOne: false
             referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {

@@ -121,15 +121,30 @@ const WhatsAppOrders = () => {
             address,
             cities (name)
           ),
-          offers (title, discount_text, images),
-          products (name, price, images)
+          offers (title, discount_text, images)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setOrders(data || []);
-      calculateStats(data || []);
+      // جلب بيانات المنتجات بشكل منفصل
+      const ordersWithProducts = await Promise.all(
+        (data || []).map(async (order) => {
+          if (order.product_id) {
+            const { data: productData } = await supabase
+              .from("products")
+              .select("name, price, images")
+              .eq("id", order.product_id)
+              .maybeSingle();
+            
+            return { ...order, products: productData };
+          }
+          return order;
+        })
+      );
+
+      setOrders(ordersWithProducts as any);
+      calculateStats(ordersWithProducts);
     } catch (error) {
       console.error("Error fetching whatsapp orders:", error);
       toast.error("حدث خطأ في تحميل الطلبات");

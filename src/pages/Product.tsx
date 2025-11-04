@@ -105,6 +105,7 @@ const Product = () => {
       // تسجيل الطلب في قاعدة البيانات
       await supabase.from("whatsapp_orders").insert({
         store_id: product.store_id,
+        product_id: product.id,
         offer_id: null,
         customer_message: message,
         source_page: "product_page",
