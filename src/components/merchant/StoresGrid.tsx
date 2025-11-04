@@ -169,7 +169,7 @@ export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
                 variant="default"
                 size="sm"
                 className="flex-1"
-                onClick={() => navigate(`/stores/${store.id}`)}
+                onClick={() => navigate(`/store/${store.id}`)}
               >
                 <Eye className="h-4 w-4 ml-1" />
                 عرض
@@ -178,7 +178,11 @@ export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
                 variant="outline"
                 size="sm"
                 className="flex-1"
-                onClick={() => onStoreSelect && onStoreSelect(store.id)}
+                onClick={() => {
+                  if (onStoreSelect) {
+                    onStoreSelect(store.id);
+                  }
+                }}
               >
                 <Edit className="h-4 w-4 ml-1" />
                 إدارة
