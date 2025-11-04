@@ -92,6 +92,11 @@ const Navbar = () => {
                 المتاجر
               </Button>
             </Link>
+            <Link to="/products">
+              <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
+                المنتجات
+              </Button>
+            </Link>
             <Link to="/offers">
               <Button variant="ghost" size="sm" className="text-base hover:text-primary hover:bg-primary/10">
                 العروض
@@ -169,6 +174,11 @@ const Navbar = () => {
               <Link to="/stores" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
                   المتاجر
+                </Button>
+              </Link>
+              <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" size="sm" className="w-full justify-start text-base hover:text-primary hover:bg-primary/10">
+                  المنتجات
                 </Button>
               </Link>
               <Link to="/offers" onClick={() => setMobileMenuOpen(false)}>
