@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone, MapPin } from "lucide-react";
+import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone, MapPin, Package, Tag, TrendingUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
@@ -422,22 +422,34 @@ const Merchant = () => {
             {currentUserId && <MerchantStats userId={currentUserId} />}
           </div>
 
-          <Tabs defaultValue="stores" className="max-w-6xl mx-auto">
-            <TabsList className="grid w-full grid-cols-4 h-14 mb-8">
-              <TabsTrigger value="stores" className="text-base">
-                <Store className="w-4 h-4 ml-2" />
-                متاجري
+          <Tabs defaultValue="stores" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 h-16 mb-8 bg-gradient-to-r from-muted/50 to-muted/30 p-1.5 rounded-xl border-2">
+              <TabsTrigger 
+                value="stores" 
+                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+              >
+                <Store className="w-5 h-5 ml-2" />
+                متاجري ({stores.length})
               </TabsTrigger>
-              <TabsTrigger value="products" className="text-base">
-                <Store className="w-4 h-4 ml-2" />
+              <TabsTrigger 
+                value="products" 
+                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+              >
+                <Package className="w-5 h-5 ml-2" />
                 منتجاتي
               </TabsTrigger>
-              <TabsTrigger value="offers" className="text-base">
-                <CheckCircle className="w-4 h-4 ml-2" />
-                عروضي
+              <TabsTrigger 
+                value="offers" 
+                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+              >
+                <Tag className="w-5 h-5 ml-2" />
+                عروضي ({offers.length})
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="text-base">
-                <Clock className="w-4 h-4 ml-2" />
+              <TabsTrigger 
+                value="analytics" 
+                className="text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-white rounded-lg transition-all duration-300 data-[state=active]:shadow-lg"
+              >
+                <TrendingUp className="w-5 h-5 ml-2" />
                 الإحصائيات
               </TabsTrigger>
             </TabsList>
