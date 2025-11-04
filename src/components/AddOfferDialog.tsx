@@ -82,21 +82,21 @@ export const AddOfferDialog = ({ open, onOpenChange, storeId, onSuccess }: AddOf
 
     try {
       // Upload images
-      const uploadedImages = [];
+      const uploadedImages = [] as any[];
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const fileName = `${Math.random().toString(36).slice(2,10)}.${ext}`;
         const filePath = `${storeId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('store-documents')
-          .upload(filePath, file);
+          .from('product-images')
+          .upload(filePath, file, { contentType: file.type || undefined });
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('store-documents')
+          .from('product-images')
           .getPublicUrl(filePath);
 
         uploadedImages.push({

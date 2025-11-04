@@ -114,7 +114,29 @@ const Stores = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setStores(data || []);
+
+      // Generate signed URLs for private bucket objects
+      const withSigned = await Promise.all(
+        (data || []).map(async (s: any) => {
+          if (s.logo_url && !s.logo_url.startsWith('http')) {
+            const { data: signed } = await supabase.storage
+              .from('store-documents')
+              .createSignedUrl(s.logo_url, 60 * 60); // 1 hour
+            return { ...s, logo_url: signed?.signedUrl || s.logo_url };
+          }
+          // handle legacy publicUrl saved from private bucket
+          if (s.logo_url && s.logo_url.includes('/object/public/store-documents/')) {
+            const path = s.logo_url.split('/object/public/store-documents/')[1];
+            const { data: signed } = await supabase.storage
+              .from('store-documents')
+              .createSignedUrl(path, 60 * 60);
+            return { ...s, logo_url: signed?.signedUrl || s.logo_url };
+          }
+          return s;
+        })
+      );
+
+      setStores(withSigned as any);
     } catch (error) {
       console.error("Error fetching stores:", error);
       toast({

@@ -123,21 +123,25 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
     }
   };
 
+  const safeObjectPath = (userId: string, file: File) => {
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const random = Math.random().toString(36).slice(2, 10);
+    const ts = Date.now().toString(36);
+    return `${userId}/${ts}_${random}.${ext}`;
+  };
+
   const uploadFile = async (file: File, bucket: string, path: string) => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        contentType: file.type || undefined,
       });
 
     if (error) throw error;
-    
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-      
-    return publicUrl;
+    // Return the object path (safer for private buckets)
+    return data.path;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,13 +169,13 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
 
       // Upload logo if provided
       if (logoFile) {
-        const logoPath = `${user.id}/${Date.now()}_${logoFile.name}`;
+        const logoPath = safeObjectPath(user.id, logoFile);
         logoUrl = await uploadFile(logoFile, 'store-documents', logoPath);
       }
 
       // Upload document if provided
       if (documentFile) {
-        const docPath = `${user.id}/${Date.now()}_${documentFile.name}`;
+        const docPath = safeObjectPath(user.id, documentFile);
         documentUrl = await uploadFile(documentFile, 'store-documents', docPath);
       }
 
