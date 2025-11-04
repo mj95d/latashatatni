@@ -26,6 +26,8 @@ interface Store {
   is_active: boolean | null;
   city_id: string | null;
   category_id: string | null;
+  cover_url?: string | null;
+  logo_url?: string | null;
   cities: { name: string } | null;
   categories: { name: string } | null;
 }
@@ -145,7 +147,36 @@ const Stores = () => {
 
       if (categoriesError) throw categoriesError;
 
-      setStores(storesData || []);
+      // Sign private image URLs (cover/logo) so they render correctly
+      const withSigned = await Promise.all(
+        (storesData || []).map(async (s: any) => {
+          let cover = s.cover_url as string | null;
+          let logo = s.logo_url as string | null;
+
+          const signIfNeeded = async (url: string | null) => {
+            if (!url) return url;
+            if (url.startsWith('http')) return url;
+            // Handle legacy saved public URLs
+            if (url.includes('/object/public/store-documents/')) {
+              const path = url.split('/object/public/store-documents/')[1];
+              const { data: signed } = await supabase.storage
+                .from('store-documents')
+                .createSignedUrl(path, 60 * 60);
+              return signed?.signedUrl || url;
+            }
+            const { data: signed } = await supabase.storage
+              .from('store-documents')
+              .createSignedUrl(url, 60 * 60);
+            return signed?.signedUrl || url;
+          };
+
+          cover = await signIfNeeded(cover);
+          logo = await signIfNeeded(logo);
+          return { ...s, cover_url: cover, logo_url: logo };
+        })
+      );
+
+      setStores(withSigned as any);
       setCities(citiesData || []);
       setCategories(categoriesData || []);
     } catch (error: any) {
@@ -385,11 +416,23 @@ const Stores = () => {
                     style={{ animationDelay: `${index * 100}ms` }}
                     onClick={() => navigate(`/store/${store.id}`)}
                   >
-                    {/* Image */}
-                    <div className="relative h-52 overflow-hidden bg-muted">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center">
-                        <Store className="w-16 h-16 text-white/30" />
-                      </div>
+                     {/* Store Image/Logo */}
+                     <div className="relative h-52 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+                        {(store.cover_url || store.logo_url) ? (
+                          <img
+                            src={store.cover_url || store.logo_url || ''}
+                            alt={store.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                       <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center ${(store.cover_url || store.logo_url) ? 'hidden' : ''}`}>
+                         <Store className="w-16 h-16 text-white/30" />
+                       </div>
                       
                       {/* Distance Badge */}
                       {(store as any).distance !== undefined && (

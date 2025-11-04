@@ -27,10 +27,23 @@ export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
   const navigate = useNavigate();
 
   // Get image URL from Supabase Storage
-  const getImageUrl = (path: string | null) => {
+  const getImageUrl = async (path: string | null) => {
     if (!path) return null;
-    const { data } = supabase.storage.from('store-documents').getPublicUrl(path);
-    return data.publicUrl;
+    if (path.startsWith('http')) return path;
+    
+    // Handle legacy saved public URLs
+    if (path.includes('/object/public/store-documents/')) {
+      const actualPath = path.split('/object/public/store-documents/')[1];
+      const { data } = await supabase.storage
+        .from('store-documents')
+        .createSignedUrl(actualPath, 60 * 60);
+      return data.signedUrl;
+    }
+    
+    const { data } = await supabase.storage
+      .from('store-documents')
+      .createSignedUrl(path, 60 * 60);
+    return data.signedUrl;
   };
 
   if (stores.length === 0) {
@@ -58,8 +71,9 @@ export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
           <div className="relative h-48 bg-gradient-to-br from-primary/10 via-primary/5 to-background overflow-hidden">
             {(store.cover_url || store.logo_url) ? (
               <img
-                src={getImageUrl(store.cover_url || store.logo_url) || ''}
+                src={store.cover_url || store.logo_url || ''}
                 alt={store.name}
+                loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
