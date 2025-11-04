@@ -226,8 +226,10 @@ export type Database = {
           business_description: string | null
           business_name: string
           city: string | null
+          commercial_document: string | null
           created_at: string | null
           id: string
+          logo_url: string | null
           notes: string | null
           phone: string
           reviewed_at: string | null
@@ -235,13 +237,17 @@ export type Database = {
           status: string
           updated_at: string | null
           user_id: string
+          website: string | null
+          whatsapp: string | null
         }
         Insert: {
           business_description?: string | null
           business_name: string
           city?: string | null
+          commercial_document?: string | null
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           notes?: string | null
           phone: string
           reviewed_at?: string | null
@@ -249,13 +255,17 @@ export type Database = {
           status?: string
           updated_at?: string | null
           user_id: string
+          website?: string | null
+          whatsapp?: string | null
         }
         Update: {
           business_description?: string | null
           business_name?: string
           city?: string | null
+          commercial_document?: string | null
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           notes?: string | null
           phone?: string
           reviewed_at?: string | null
@@ -263,6 +273,8 @@ export type Database = {
           status?: string
           updated_at?: string | null
           user_id?: string
+          website?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }

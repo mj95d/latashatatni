@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
@@ -32,8 +32,13 @@ const Merchant = () => {
     business_name: "",
     business_description: "",
     phone: "",
-    city: ""
+    city: "",
+    website: "",
+    whatsapp: ""
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
 
   useEffect(() => {
     checkMerchantRequest();
@@ -112,6 +117,79 @@ const Merchant = () => {
     }
   };
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "خطأ",
+        description: "يرجى رفع صورة بصيغة JPG, PNG أو WEBP فقط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "خطأ",
+        description: "يرجى رفع ملف PDF أو صورة فقط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الملف يجب أن يكون أقل من 10 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDocumentFile(file);
+  };
+
+  const uploadFile = async (file: File, bucket: string, path: string) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+    return data.path;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -128,12 +206,33 @@ const Merchant = () => {
         return;
       }
 
+      let logoUrl = "";
+      let documentUrl = "";
+
+      // Upload logo if provided
+      if (logoFile) {
+        const timestamp = Date.now();
+        const safeFileName = logoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const logoPath = `merchant-requests/${user.id}/logo_${timestamp}_${safeFileName}`;
+        logoUrl = await uploadFile(logoFile, 'store-documents', logoPath);
+      }
+
+      // Upload document if provided
+      if (documentFile) {
+        const timestamp = Date.now();
+        const safeFileName = documentFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const docPath = `merchant-requests/${user.id}/document_${timestamp}_${safeFileName}`;
+        documentUrl = await uploadFile(documentFile, 'store-documents', docPath);
+      }
+
       const { error } = await supabase
         .from("merchant_requests")
         .insert([
           {
             user_id: user.id,
-            ...formData
+            ...formData,
+            logo_url: logoUrl,
+            commercial_document: documentUrl
           }
         ]);
 
@@ -145,6 +244,17 @@ const Merchant = () => {
       });
 
       setRequestStatus("pending");
+      setFormData({
+        business_name: "",
+        business_description: "",
+        phone: "",
+        city: "",
+        website: "",
+        whatsapp: ""
+      });
+      setLogoFile(null);
+      setLogoPreview("");
+      setDocumentFile(null);
     } catch (error: any) {
       toast({
         title: "خطأ",
@@ -547,7 +657,10 @@ const Merchant = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-base">رقم الهاتف *</Label>
+                    <Label htmlFor="phone" className="text-base">
+                      <Phone className="w-4 h-4 inline-block ml-1" />
+                      رقم الهاتف *
+                    </Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -562,6 +675,25 @@ const Merchant = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="whatsapp" className="text-base">
+                      <Phone className="w-4 h-4 inline-block ml-1" />
+                      واتساب
+                    </Label>
+                    <Input
+                      id="whatsapp"
+                      name="whatsapp"
+                      type="tel"
+                      value={formData.whatsapp}
+                      onChange={handleChange}
+                      placeholder="+966 50 000 0000"
+                      className="h-12"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
                     <Label htmlFor="city" className="text-base">المدينة</Label>
                     <Input
                       id="city"
@@ -572,6 +704,110 @@ const Merchant = () => {
                       className="h-12"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="website" className="text-base">
+                      <Globe className="w-4 h-4 inline-block ml-1" />
+                      الموقع الإلكتروني
+                    </Label>
+                    <Input
+                      id="website"
+                      name="website"
+                      type="url"
+                      value={formData.website}
+                      onChange={handleChange}
+                      placeholder="https://example.com"
+                      className="h-12"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                {/* Logo Upload */}
+                <div className="space-y-3">
+                  <Label htmlFor="logo" className="text-base">
+                    <Upload className="w-4 h-4 inline-block ml-1" />
+                    صورة شعار المتجر
+                  </Label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                    />
+                    <label 
+                      htmlFor="logo" 
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                    >
+                      {logoPreview ? (
+                        <div className="relative">
+                          <img 
+                            src={logoPreview} 
+                            alt="Logo Preview" 
+                            className="h-32 w-32 object-cover rounded-lg border-2 border-primary/30"
+                          />
+                          <p className="text-xs text-muted-foreground mt-2 text-center">
+                            انقر لتغيير الصورة
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-12 h-12 text-muted-foreground mb-3" />
+                          <p className="text-sm font-medium text-center mb-1">
+                            انقر لرفع شعار المتجر
+                          </p>
+                          <p className="text-xs text-muted-foreground text-center">
+                            JPG, PNG, WEBP (حد أقصى 5 ميجابايت)
+                          </p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                {/* Commercial Document Upload */}
+                <div className="space-y-3">
+                  <Label htmlFor="document" className="text-base">
+                    <FileText className="w-4 h-4 inline-block ml-1" />
+                    شهادة / سجل تجاري
+                  </Label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+                    <Input
+                      id="document"
+                      type="file"
+                      accept="application/pdf,image/jpeg,image/jpg,image/png"
+                      onChange={handleDocumentChange}
+                      className="hidden"
+                    />
+                    <label 
+                      htmlFor="document" 
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                    >
+                      {documentFile ? (
+                        <div className="text-center">
+                          <FileText className="w-12 h-12 text-primary mx-auto mb-3" />
+                          <p className="text-sm font-medium mb-1">
+                            {documentFile.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            انقر لتغيير الملف
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <FileText className="w-12 h-12 text-muted-foreground mb-3" />
+                          <p className="text-sm font-medium text-center mb-1">
+                            انقر لرفع السجل التجاري أو الشهادة
+                          </p>
+                          <p className="text-xs text-muted-foreground text-center">
+                            PDF أو صورة (حد أقصى 10 ميجابايت)
+                          </p>
+                        </>
+                      )}
+                    </label>
+                  </div>
                 </div>
 
                 <div className="bg-muted/50 p-6 rounded-lg border-2 border-border/50">
@@ -580,6 +816,7 @@ const Merchant = () => {
                     <li>• سيتم مراجعة طلبك من قبل فريقنا</li>
                     <li>• ستتلقى إشعاراً عند الموافقة على طلبك</li>
                     <li>• يجب أن تكون المعلومات المقدمة صحيحة ودقيقة</li>
+                    <li>• يُنصح بإرفاق شعار المتجر والسجل التجاري لتسريع المراجعة</li>
                   </ul>
                 </div>
 
