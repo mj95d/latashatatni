@@ -99,6 +99,23 @@ const Stores = () => {
   useEffect(() => {
     fetchStores();
     fetchCities();
+
+    // Realtime: update list immediately when stores are added/updated/deleted
+    const channel = supabase
+      .channel('admin-stores-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'stores' },
+        (payload) => {
+          console.log('Realtime stores change (admin):', payload);
+          fetchStores();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchStores = async () => {
