@@ -12,6 +12,7 @@ export { default as CreateAdmins } from "./CreateAdmins";
 export { default as Cities } from "./Cities";
 export { default as Reports } from "./Reports";
 export { default as Logs } from "./Logs";
+export { default as WhatsAppOrders } from "./WhatsAppOrders";
 
 export { default as Settings } from "./Settings";
 

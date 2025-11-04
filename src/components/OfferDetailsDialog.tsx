@@ -50,12 +50,30 @@ export const OfferDetailsDialog = ({ offer, open, onOpenChange }: OfferDetailsDi
   const startDate = new Date(offer.start_date);
   const endDate = offer.end_date ? new Date(offer.end_date) : null;
 
-  const handleWhatsAppClick = () => {
-    const phone = offer.stores?.whatsapp || offer.stores?.phone;
-    if (phone) {
-      const message = encodeURIComponent(`مرحباً، أنا مهتم بالعرض: ${offer.title}`);
-      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+  const handleWhatsAppClick = async () => {
+    const { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP } = await import("@/lib/whatsapp");
+    const { supabase } = await import("@/integrations/supabase/client");
+    
+    const message = buildWhatsAppMessage({
+      storeName: offer.stores?.name || "متجر",
+      offerName: offer.title
+    });
+    
+    // تسجيل الطلب في قاعدة البيانات
+    try {
+      await supabase.from("whatsapp_orders").insert({
+        store_id: offer.stores ? offer.id : null,
+        offer_id: offer.id,
+        customer_message: message,
+        source_page: "offer_details_dialog",
+        user_agent: navigator.userAgent
+      });
+    } catch (error) {
+      console.error("Error logging whatsapp order:", error);
     }
+    
+    // فتح واتساب
+    window.open(buildWhatsAppLink(PLATFORM_WHATSAPP, message), '_blank');
   };
 
   return (

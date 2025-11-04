@@ -59,6 +59,7 @@ const App = () => (
             <Route path="users" element={<AdminPages.Users />} />
             <Route path="merchant-requests" element={<AdminPages.MerchantRequests />} />
             <Route path="orders" element={<AdminPages.Orders />} />
+            <Route path="whatsapp-orders" element={<AdminPages.WhatsAppOrders />} />
             <Route path="stores" element={<AdminPages.Stores />} />
             <Route path="products" element={<AdminPages.Products />} />
             <Route path="offers" element={<AdminPages.Offers />} />

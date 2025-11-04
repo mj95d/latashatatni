@@ -820,6 +820,63 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_orders: {
+        Row: {
+          created_at: string | null
+          customer_message: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          offer_id: string | null
+          source_page: string
+          status: string
+          store_id: string | null
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_message: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          offer_id?: string | null
+          source_page: string
+          status?: string
+          store_id?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_message?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          offer_id?: string | null
+          source_page?: string
+          status?: string
+          store_id?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_orders_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

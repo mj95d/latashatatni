@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
-  UserPlus
+  UserPlus,
+  MessageCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const adminMenuItems = [
   { title: "إدارة المستخدمين", url: "/admin/users", icon: Users },
   { title: "طلبات التجار", url: "/admin/merchant-requests", icon: UserCheck },
   { title: "الطلبات", url: "/admin/orders", icon: ShoppingCart },
+  { title: "طلبات الواتساب", url: "/admin/whatsapp-orders", icon: MessageCircle },
   { title: "إدارة المتاجر", url: "/admin/stores", icon: Store },
   { title: "إدارة المنتجات", url: "/admin/products", icon: Package },
   { title: "إدارة العروض", url: "/admin/offers", icon: Tag },
