@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone } from "lucide-react";
+import { Store, Clock, CheckCircle, XCircle, Loader2, Upload, FileText, Globe, Phone, MapPin } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
 import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
 import { ProductsManager } from "@/components/merchant/ProductsManager";
+import MapPicker from "@/components/MapPicker";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -34,7 +35,10 @@ const Merchant = () => {
     phone: "",
     city: "",
     website: "",
-    whatsapp: ""
+    whatsapp: "",
+    address: "",
+    latitude: 24.7136 as number | "",
+    longitude: 46.6753 as number | ""
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -190,6 +194,14 @@ const Merchant = () => {
     return data.path;
   };
 
+  const handleLocationChange = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -214,7 +226,20 @@ const Merchant = () => {
         const timestamp = Date.now();
         const safeFileName = logoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const logoPath = `merchant-requests/${user.id}/logo_${timestamp}_${safeFileName}`;
-        logoUrl = await uploadFile(logoFile, 'store-documents', logoPath);
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from('store-documents')
+          .upload(logoPath, logoFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Logo upload error:", uploadError);
+          throw new Error("فشل رفع الشعار: " + uploadError.message);
+        }
+        
+        logoUrl = logoPath;
       }
 
       // Upload document if provided
@@ -222,21 +247,47 @@ const Merchant = () => {
         const timestamp = Date.now();
         const safeFileName = documentFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const docPath = `merchant-requests/${user.id}/document_${timestamp}_${safeFileName}`;
-        documentUrl = await uploadFile(documentFile, 'store-documents', docPath);
+        
+        const { data, error: uploadError } = await supabase.storage
+          .from('store-documents')
+          .upload(docPath, documentFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Document upload error:", uploadError);
+          throw new Error("فشل رفع الوثيقة: " + uploadError.message);
+        }
+        
+        documentUrl = docPath;
       }
+
+      const insertData = {
+        user_id: user.id,
+        business_name: formData.business_name,
+        business_description: formData.business_description,
+        phone: formData.phone,
+        city: formData.city,
+        website: formData.website || null,
+        whatsapp: formData.whatsapp || null,
+        address: formData.address || null,
+        latitude: formData.latitude || null,
+        longitude: formData.longitude || null,
+        logo_url: logoUrl || null,
+        commercial_document: documentUrl || null
+      };
+
+      console.log("Inserting merchant request:", insertData);
 
       const { error } = await supabase
         .from("merchant_requests")
-        .insert([
-          {
-            user_id: user.id,
-            ...formData,
-            logo_url: logoUrl,
-            commercial_document: documentUrl
-          }
-        ]);
+        .insert([insertData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Insert error:", error);
+        throw error;
+      }
 
       toast({
         title: "تم إرسال الطلب بنجاح",
@@ -250,12 +301,16 @@ const Merchant = () => {
         phone: "",
         city: "",
         website: "",
-        whatsapp: ""
+        whatsapp: "",
+        address: "",
+        latitude: 24.7136,
+        longitude: 46.6753
       });
       setLogoFile(null);
       setLogoPreview("");
       setDocumentFile(null);
     } catch (error: any) {
+      console.error("Submit error:", error);
       toast({
         title: "خطأ",
         description: error.message || "حدث خطأ أثناء إرسال الطلب",
@@ -721,6 +776,45 @@ const Merchant = () => {
                       dir="ltr"
                     />
                   </div>
+                </div>
+
+                {/* Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-base">
+                    <MapPin className="w-4 h-4 inline-block ml-1" />
+                    عنوان المتجر
+                  </Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="أدخل عنوان المتجر التفصيلي"
+                    className="h-12"
+                  />
+                </div>
+
+                {/* Map Picker */}
+                <div className="space-y-3">
+                  <Label className="text-base">
+                    <MapPin className="w-4 h-4 inline-block ml-1" />
+                    موقع المتجر على الخريطة *
+                  </Label>
+                  <div className="border-2 border-border rounded-lg overflow-hidden h-[400px]">
+                    <MapPicker
+                      latitude={typeof formData.latitude === 'number' ? formData.latitude : null}
+                      longitude={typeof formData.longitude === 'number' ? formData.longitude : null}
+                      onLocationChange={handleLocationChange}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    اضغط على الخريطة لتحديد موقع متجرك بدقة
+                    {formData.latitude && formData.longitude && (
+                      <span className="mr-2 font-medium text-primary">
+                        (تم التحديد ✓)
+                      </span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Logo Upload */}

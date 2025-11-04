@@ -223,13 +223,16 @@ export type Database = {
       }
       merchant_requests: {
         Row: {
+          address: string | null
           business_description: string | null
           business_name: string
           city: string | null
           commercial_document: string | null
           created_at: string | null
           id: string
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           notes: string | null
           phone: string
           reviewed_at: string | null
@@ -241,13 +244,16 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          address?: string | null
           business_description?: string | null
           business_name: string
           city?: string | null
           commercial_document?: string | null
           created_at?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           notes?: string | null
           phone: string
           reviewed_at?: string | null
@@ -259,13 +265,16 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          address?: string | null
           business_description?: string | null
           business_name?: string
           city?: string | null
           commercial_document?: string | null
           created_at?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           notes?: string | null
           phone?: string
           reviewed_at?: string | null
