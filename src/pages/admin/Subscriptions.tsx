@@ -45,23 +45,51 @@ export default function Subscriptions() {
 
   useEffect(() => {
     fetchRequests();
+
+    // Realtime subscription for auto-refresh
+    const channel = supabase
+      .channel('subscription-requests-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'subscription_requests' },
+        (payload) => {
+          console.log('Subscription request change:', payload);
+          fetchRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchRequests = async () => {
     try {
       const { data, error } = await supabase
         .from('subscription_requests')
-        .select(`
-          *,
-          profiles:merchant_id (
-            full_name,
-            phone
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+
+      // Fetch merchant profiles separately
+      const requestsWithProfiles = await Promise.all(
+        (data || []).map(async (req) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', req.merchant_id)
+            .maybeSingle();
+          
+          return {
+            ...req,
+            profiles: profile
+          };
+        })
+      );
+
+      setRequests(requestsWithProfiles as any);
     } catch (error: any) {
       console.error("Error fetching requests:", error);
       toast({
@@ -244,6 +272,7 @@ export default function Subscriptions() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>التاجر</TableHead>
               <TableHead>الباقة</TableHead>
               <TableHead>المدة</TableHead>
               <TableHead>المبلغ</TableHead>
@@ -255,13 +284,25 @@ export default function Subscriptions() {
           <TableBody>
             {requests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   لا توجد طلبات اشتراك
                 </TableCell>
               </TableRow>
             ) : (
               requests.map((request) => (
                 <TableRow key={request.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">
+                        {(request as any).profiles?.full_name || "غير محدد"}
+                      </div>
+                      {(request as any).profiles?.phone && (
+                        <div className="text-xs text-muted-foreground" dir="ltr">
+                          {(request as any).profiles.phone}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">{getPlanName(request.plan)}</TableCell>
                   <TableCell>{getDurationName(request.duration)}</TableCell>
                   <TableCell>{request.price} ريال</TableCell>
@@ -295,6 +336,17 @@ export default function Subscriptions() {
           {selectedRequest && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>التاجر</Label>
+                  <p className="font-semibold">
+                    {(selectedRequest as any).profiles?.full_name || "غير محدد"}
+                  </p>
+                  {(selectedRequest as any).profiles?.phone && (
+                    <p className="text-sm text-muted-foreground" dir="ltr">
+                      {(selectedRequest as any).profiles.phone}
+                    </p>
+                  )}
+                </div>
                 <div>
                   <Label>الباقة</Label>
                   <p className="font-semibold">{getPlanName(selectedRequest.plan)}</p>
