@@ -57,7 +57,7 @@ const Merchant = () => {
     };
     getCurrentUser();
     checkMerchantRequest();
-    if (userRole === 'merchant') {
+    if (userRole === 'merchant' || userRole === 'admin') {
       fetchStores();
       fetchOffers();
     }
