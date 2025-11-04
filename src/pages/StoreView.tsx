@@ -123,13 +123,44 @@ const StoreView = () => {
     navigate(`/product/${productId}`);
   };
 
-  const handleWhatsAppContact = () => {
+  const handleWhatsAppContact = async () => {
     if (!store) return;
 
     const phone = store.whatsapp || store.phone || "";
+    if (!phone) {
+      showToast({
+        title: "تحذير",
+        description: "رقم الواتساب غير متوفر لهذا المتجر",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const message = `مرحباً، أرغب في الاستفسار عن متجر ${store.name}`;
-    const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+    
+    try {
+      // تسجيل في قاعدة البيانات
+      await supabase.from("whatsapp_orders").insert({
+        store_id: store.id,
+        customer_message: message,
+        source_page: "store_view",
+        user_agent: navigator.userAgent,
+        status: 'NEW'
+      });
+
+      const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+      
+      showToast({
+        title: "تم الإرسال",
+        description: "سيتم فتح واتساب للتواصل مع المتجر",
+      });
+    } catch (error: any) {
+      console.error("Error logging whatsapp contact:", error);
+      // فتح واتساب حتى لو فشل التسجيل
+      const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+    }
   };
 
   if (loading) {

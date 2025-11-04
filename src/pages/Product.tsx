@@ -94,7 +94,10 @@ const Product = () => {
   };
 
   const handleWhatsAppOrder = async () => {
-    if (!product) return;
+    if (!product) {
+      toast.error("معلومات المنتج غير متوفرة");
+      return;
+    }
 
     const message = buildWhatsAppMessage({
       storeName: product.stores?.name || "متجر",
@@ -103,22 +106,33 @@ const Product = () => {
 
     try {
       // تسجيل الطلب في قاعدة البيانات
-      await supabase.from("whatsapp_orders").insert({
-        store_id: product.store_id,
-        product_id: product.id,
-        offer_id: null,
-        customer_message: message,
-        source_page: "product_page",
-        user_agent: navigator.userAgent
-      });
+      const { data: orderData, error: orderError } = await supabase
+        .from("whatsapp_orders")
+        .insert({
+          store_id: product.store_id,
+          product_id: product.id,
+          offer_id: null,
+          customer_message: message,
+          source_page: "product_page",
+          user_agent: navigator.userAgent,
+          status: 'NEW'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error("Error creating order:", orderError);
+        throw new Error("فشل تسجيل الطلب");
+      }
 
       // فتح واتساب
-      window.open(buildWhatsAppLink(PLATFORM_WHATSAPP, message), '_blank');
+      const whatsappPhone = product.stores?.whatsapp || product.stores?.phone || PLATFORM_WHATSAPP;
+      window.open(buildWhatsAppLink(whatsappPhone, message), '_blank');
       
-      toast.success("تم تسجيل طلبك! سيتم التواصل معك قريباً");
-    } catch (error) {
+      toast.success("✓ تم تسجيل طلبك! سيتم التواصل معك قريباً");
+    } catch (error: any) {
       console.error("Error creating order:", error);
-      toast.error("حدث خطأ في إرسال الطلب");
+      toast.error(error.message || "حدث خطأ في إرسال الطلب");
     }
   };
 

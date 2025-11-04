@@ -56,42 +56,91 @@ const Merchant = () => {
   const fetchStores = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.warn("No authenticated user found");
+        return;
+      }
 
       const { data, error } = await supabase
         .from("stores")
-        .select("*")
+        .select(`
+          *,
+          categories (
+            name,
+            icon
+          ),
+          cities (
+            name
+          )
+        `)
         .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching stores:", error);
+        toast({
+          title: "خطأ في تحميل المتاجر",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setStores(data || []);
       if (data && data.length > 0 && !selectedStoreId) {
         setSelectedStoreId(data[0].id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching stores:", error);
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ في تحميل المتاجر",
+        variant: "destructive",
+      });
     }
   };
 
   const fetchOffers = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.warn("No authenticated user found");
+        return;
+      }
 
       const { data, error } = await supabase
         .from("offers")
         .select(`
           *,
-          stores!inner(owner_id)
+          stores!inner(
+            id,
+            name,
+            owner_id,
+            cities (name),
+            categories (name)
+          )
         `)
         .eq("stores.owner_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching offers:", error);
+        toast({
+          title: "خطأ في تحميل العروض",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setOffers(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching offers:", error);
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ في تحميل العروض",
+        variant: "destructive",
+      });
     }
   };
 

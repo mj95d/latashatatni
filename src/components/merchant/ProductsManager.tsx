@@ -70,16 +70,38 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
 
   const fetchProducts = async () => {
     try {
+      if (!storeId) {
+        console.warn("No store ID provided");
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("store_id", storeId)
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
+      if (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "خطأ في تحميل المنتجات",
+          description: error.message,
+          variant: "destructive",
+        });
+        setProducts([]);
+      } else {
+        setProducts(data || []);
+      }
+    } catch (error: any) {
       console.error("Error fetching products:", error);
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ في تحميل المنتجات",
+        variant: "destructive",
+      });
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -175,21 +197,42 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const uploadImages = async () => {
     const uploadedUrls: string[] = [];
 
+    if (!storeId) {
+      throw new Error("معرّف المتجر غير موجود");
+    }
+
     // Upload images in order, with primary image first
     const orderedFiles = [...selectedFiles];
     const primaryFile = orderedFiles.splice(primaryImageIndex, 1)[0];
     orderedFiles.unshift(primaryFile);
 
     for (const file of orderedFiles) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        throw new Error(`نوع الملف ${file.name} غير مدعوم. استخدم JPG, PNG أو WEBP`);
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error(`حجم الملف ${file.name} كبير جداً. الحد الأقصى 5 ميجابايت`);
+      }
+
       const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${storeId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from("product-images")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw new Error(`فشل رفع ${file.name}: ${uploadError.message}`);
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from("product-images")
@@ -204,10 +247,29 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.price) {
+    // Validation
+    if (!formData.name?.trim()) {
       toast({
         title: "خطأ",
-        description: "يرجى ملء جميع الحقول المطلوبة",
+        description: "يرجى إدخال اسم المنتج",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال سعر صحيح",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.old_price && parseFloat(formData.old_price) <= parseFloat(formData.price)) {
+      toast({
+        title: "خطأ",
+        description: "السعر قبل الخصم يجب أن يكون أكبر من السعر الحالي",
         variant: "destructive",
       });
       return;
@@ -222,36 +284,69 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       return;
     }
 
+    if (!storeId) {
+      toast({
+        title: "خطأ",
+        description: "لم يتم تحديد المتجر",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
 
     try {
+      // Upload images
       const imageUrls = await uploadImages();
 
-      const { error } = await supabase.from("products").insert({
-        store_id: storeId,
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        old_price: formData.old_price ? parseFloat(formData.old_price) : null,
-        images: imageUrls,
-      });
+      if (!imageUrls || imageUrls.length === 0) {
+        throw new Error("فشل رفع الصور");
+      }
 
-      if (error) throw error;
+      // Insert product
+      const { data: insertedProduct, error: insertError } = await supabase
+        .from("products")
+        .insert({
+          store_id: storeId,
+          name: formData.name.trim(),
+          description: formData.description?.trim() || null,
+          price: parseFloat(formData.price),
+          old_price: formData.old_price ? parseFloat(formData.old_price) : null,
+          images: imageUrls,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        throw new Error(insertError.message || "فشل إضافة المنتج");
+      }
 
       toast({
-        title: "تم بنجاح",
-        description: "تم إضافة المنتج بنجاح",
+        title: "تم بنجاح ✓",
+        description: `تم إضافة ${formData.name} بنجاح`,
       });
 
-      setFormData({ name: "", description: "", price: "", old_price: "", quantity: "1", category: "" });
+      // Reset form
+      setFormData({ 
+        name: "", 
+        description: "", 
+        price: "", 
+        old_price: "", 
+        quantity: "1", 
+        category: "" 
+      });
       setSelectedFiles([]);
       setPrimaryImageIndex(0);
       setIsDialogOpen(false);
-      fetchProducts();
+      
+      // Refresh products
+      await fetchProducts();
     } catch (error: any) {
       console.error("Error adding product:", error);
       toast({
-        title: "خطأ",
+        title: "خطأ في الإضافة",
         description: error.message || "حدث خطأ أثناء إضافة المنتج",
         variant: "destructive",
       });
