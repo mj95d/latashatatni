@@ -20,6 +20,9 @@ import {
   Star,
   GripVertical,
   Copy,
+  Settings2,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +32,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 
 interface Product {
   id: string;
@@ -56,6 +61,11 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [storeName, setStoreName] = useState("");
+  const [imageOptions, setImageOptions] = useState({
+    enableCompression: true,
+    enableWatermark: true,
+    compressionQuality: 0.8,
+  });
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -226,10 +236,16 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     const primaryFile = orderedFiles.splice(primaryImageIndex, 1)[0];
     orderedFiles.unshift(primaryFile);
 
-    toast({
-      title: "جاري معالجة الصور...",
-      description: "ضغط الصور وإضافة العلامة المائية",
-    });
+    const processingSteps: string[] = [];
+    if (imageOptions.enableCompression) processingSteps.push("ضغط الصور");
+    if (imageOptions.enableWatermark) processingSteps.push("إضافة العلامة المائية");
+    
+    if (processingSteps.length > 0) {
+      toast({
+        title: "جاري معالجة الصور...",
+        description: processingSteps.join(" و "),
+      });
+    }
 
     for (let i = 0; i < orderedFiles.length; i++) {
       const file = orderedFiles[i];
@@ -240,8 +256,16 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
         throw new Error(`نوع الملف ${file.name} غير مدعوم. استخدم JPG, PNG أو WEBP`);
       }
 
-      // Process image: compress + watermark
-      const processedFile = await processImage(file, storeName);
+      // Process image based on options
+      const processedFile = await processImage(
+        file, 
+        storeName,
+        {
+          enableCompression: imageOptions.enableCompression,
+          enableWatermark: imageOptions.enableWatermark,
+          compressionQuality: imageOptions.compressionQuality,
+        }
+      );
 
       const fileExt = 'jpg'; // Always save as JPG after processing
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -612,6 +636,93 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   <span className="text-sm text-muted-foreground">
                     {selectedFiles.length} / 10 صور
                   </span>
+                </div>
+
+                {/* خيارات معالجة الصور */}
+                <div className="bg-muted/50 rounded-lg p-4 space-y-4 border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Settings2 className="w-5 h-5 text-primary" />
+                    <h4 className="font-semibold text-sm">خيارات معالجة الصور</h4>
+                  </div>
+
+                  {/* الضغط التلقائي */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <Label htmlFor="compression" className="font-medium text-sm">
+                          ضغط الصور تلقائياً
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          تقليل حجم الصور لرفع أسرع
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="compression"
+                      checked={imageOptions.enableCompression}
+                      onCheckedChange={(checked) =>
+                        setImageOptions({ ...imageOptions, enableCompression: checked })
+                      }
+                    />
+                  </div>
+
+                  {/* جودة الضغط */}
+                  {imageOptions.enableCompression && (
+                    <div className="space-y-2 pr-14 animate-in slide-in-from-top-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">
+                          جودة الضغط
+                        </Label>
+                        <span className="text-xs font-medium">
+                          {Math.round(imageOptions.compressionQuality * 100)}%
+                        </span>
+                      </div>
+                      <Slider
+                        value={[imageOptions.compressionQuality]}
+                        onValueChange={([value]) =>
+                          setImageOptions({ ...imageOptions, compressionQuality: value })
+                        }
+                        min={0.5}
+                        max={1}
+                        step={0.1}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {imageOptions.compressionQuality >= 0.9
+                          ? "جودة عالية (حجم أكبر)"
+                          : imageOptions.compressionQuality >= 0.7
+                          ? "جودة متوسطة (موصى به)"
+                          : "جودة منخفضة (حجم أصغر)"}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* العلامة المائية */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <Label htmlFor="watermark" className="font-medium text-sm">
+                          علامة مائية تلقائية
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          إضافة اسم متجرك على الصور
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="watermark"
+                      checked={imageOptions.enableWatermark}
+                      onCheckedChange={(checked) =>
+                        setImageOptions({ ...imageOptions, enableWatermark: checked })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div 

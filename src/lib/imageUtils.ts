@@ -1,12 +1,13 @@
 import imageCompression from 'browser-image-compression';
 
 // Compress image before upload
-export const compressImage = async (file: File): Promise<File> => {
+export const compressImage = async (file: File, quality: number = 0.8): Promise<File> => {
   const options = {
     maxSizeMB: 1, // Max 1MB
     maxWidthOrHeight: 1920, // Max dimension
     useWebWorker: true,
     fileType: 'image/jpeg', // Convert all to JPEG
+    initialQuality: quality,
   };
 
   try {
@@ -103,16 +104,33 @@ export const addWatermark = async (
 // Process image: compress + watermark
 export const processImage = async (
   file: File,
-  storeName: string
+  storeName: string,
+  options?: {
+    enableCompression?: boolean;
+    enableWatermark?: boolean;
+    compressionQuality?: number;
+  }
 ): Promise<File> => {
   try {
-    // First compress
-    const compressed = await compressImage(file);
+    const {
+      enableCompression = true,
+      enableWatermark = true,
+      compressionQuality = 0.8,
+    } = options || {};
+
+    let processedFile = file;
     
-    // Then add watermark
-    const watermarked = await addWatermark(compressed, storeName);
+    // First compress if enabled
+    if (enableCompression) {
+      processedFile = await compressImage(processedFile, compressionQuality);
+    }
     
-    return watermarked;
+    // Then add watermark if enabled
+    if (enableWatermark) {
+      processedFile = await addWatermark(processedFile, storeName);
+    }
+    
+    return processedFile;
   } catch (error) {
     console.error('Error processing image:', error);
     return file; // Return original if processing fails
