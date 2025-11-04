@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { CalendarIcon, Upload, X } from "lucide-react";
+import { CalendarIcon, Upload, X, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,7 +31,32 @@ export const AddOfferDialog = ({ open, onOpenChange, storeId, onSuccess }: AddOf
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const { toast } = useToast();
+
+  // Fetch products for this store
+  useEffect(() => {
+    if (open && storeId) {
+      fetchProducts();
+    }
+  }, [open, storeId]);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, price, sku")
+        .eq("store_id", storeId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -115,10 +141,11 @@ export const AddOfferDialog = ({ open, onOpenChange, storeId, onSuccess }: AddOf
           discount_text: discountText.trim() || null,
           discount_percentage: discountPercentage ? parseInt(discountPercentage) : null,
           images: uploadedImages,
-          image_url: uploadedImages[0].url, // للتوافق مع الحقل القديم
+          image_url: uploadedImages[0].url,
           start_date: startDate.toISOString(),
           end_date: endDate ? endDate.toISOString() : null,
-          is_active: true
+          is_active: true,
+          product_id: selectedProductId || null,
         });
 
       if (insertError) throw insertError;
@@ -137,6 +164,7 @@ export const AddOfferDialog = ({ open, onOpenChange, storeId, onSuccess }: AddOf
       setEndDate(undefined);
       setImages([]);
       setImagePreviewUrls([]);
+      setSelectedProductId("");
       
       onSuccess();
       onOpenChange(false);
@@ -182,6 +210,30 @@ export const AddOfferDialog = ({ open, onOpenChange, storeId, onSuccess }: AddOf
               placeholder="اكتب تفاصيل العرض..."
               rows={4}
             />
+          </div>
+
+          {/* Product Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="product" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              ربط العرض بمنتج محدد (اختياري)
+            </Label>
+            <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر منتجاً أو اترك العرض عام" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">عرض عام (غير مرتبط بمنتج)</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name} - {product.price} ر.س {product.sku && `(${product.sku})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              يمكنك ربط العرض بمنتج محدد أو جعله عاماً على المتجر
+            </p>
           </div>
 
           {/* Discount */}

@@ -298,6 +298,7 @@ export type Database = {
           image_url: string | null
           images: Json | null
           is_active: boolean | null
+          product_id: string | null
           start_date: string | null
           store_id: string | null
           title: string
@@ -313,6 +314,7 @@ export type Database = {
           image_url?: string | null
           images?: Json | null
           is_active?: boolean | null
+          product_id?: string | null
           start_date?: string | null
           store_id?: string | null
           title: string
@@ -328,12 +330,20 @@ export type Database = {
           image_url?: string | null
           images?: Json | null
           is_active?: boolean | null
+          product_id?: string | null
           start_date?: string | null
           store_id?: string | null
           title?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "offers_store_id_fkey"
             columns: ["store_id"]
@@ -398,41 +408,50 @@ export type Database = {
       }
       products: {
         Row: {
+          category: string | null
           created_at: string | null
           description: string | null
           id: string
           images: Json | null
           is_active: boolean | null
+          is_featured: boolean | null
           name: string
           old_price: number | null
           price: number | null
           sku: string | null
+          stock_quantity: number | null
           store_id: string | null
           updated_at: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           images?: Json | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           name: string
           old_price?: number | null
           price?: number | null
           sku?: string | null
+          stock_quantity?: number | null
           store_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           images?: Json | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           name?: string
           old_price?: number | null
           price?: number | null
           sku?: string | null
+          stock_quantity?: number | null
           store_id?: string | null
           updated_at?: string | null
         }

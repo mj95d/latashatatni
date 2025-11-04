@@ -44,6 +44,9 @@ interface Product {
   is_active: boolean;
   sku: string | null;
   created_at: string;
+  category: string | null;
+  stock_quantity: number;
+  is_featured: boolean;
 }
 
 interface ProductsManagerProps {
@@ -72,6 +75,9 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     price: "",
     old_price: "",
     sku: "",
+    category: "",
+    stock_quantity: "0",
+    is_featured: false,
   });
 
   useEffect(() => {
@@ -269,7 +275,10 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
           old_price: formData.old_price ? parseFloat(formData.old_price) : null,
           sku: productSku,
           images: imageUrls,
-          is_active: true, // Product goes live immediately
+          is_active: true,
+          category: formData.category || null,
+          stock_quantity: parseInt(formData.stock_quantity) || 0,
+          is_featured: formData.is_featured,
         })
         .select()
         .single();
@@ -288,6 +297,9 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
         price: "",
         old_price: "",
         sku: "",
+        category: "",
+        stock_quantity: "0",
+        is_featured: false,
       });
       setSelectedFiles([]);
       setPreviewUrls([]);
@@ -593,6 +605,20 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="category" className="text-sm font-semibold">
+                    فئة المنتج
+                  </Label>
+                  <Input
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    placeholder="مثال: إلكترونيات، ملابس، أثاث"
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="sku" className="text-sm font-semibold">
                     كود المنتج (SKU)
                   </Label>
@@ -608,6 +634,22 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   <p className="text-xs text-muted-foreground mt-1">
                     كود فريد للمنتج (سيُنشأ تلقائياً إن ترك فارغاً)
                   </p>
+                </div>
+                <div>
+                  <Label htmlFor="stock_quantity" className="text-sm font-semibold">
+                    الكمية المتوفرة
+                  </Label>
+                  <Input
+                    id="stock_quantity"
+                    type="number"
+                    min="0"
+                    value={formData.stock_quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stock_quantity: e.target.value })
+                    }
+                    placeholder="0"
+                    className="mt-1.5"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="price" className="text-sm font-semibold">
@@ -646,6 +688,25 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   <p className="text-xs text-muted-foreground mt-1">
                     سيظهر كخصم في بطاقة المنتج
                   </p>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                    <Switch
+                      id="is_featured"
+                      checked={formData.is_featured}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, is_featured: checked })
+                      }
+                    />
+                    <div>
+                      <Label htmlFor="is_featured" className="text-sm font-semibold cursor-pointer">
+                        منتج مميز ⭐
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        المنتجات المميزة تظهر في أعلى نتائج البحث
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
