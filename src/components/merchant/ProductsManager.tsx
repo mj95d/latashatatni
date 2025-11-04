@@ -385,12 +385,17 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
             <Card key={product.id} className="overflow-hidden group">
-              <div className="relative h-48">
+              <div className="relative h-48 bg-muted">
                 {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
                   <img
-                    src={product.images[0]}
+                    src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || product.images[0]}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-muted flex items-center justify-center">

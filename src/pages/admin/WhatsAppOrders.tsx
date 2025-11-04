@@ -22,6 +22,7 @@ interface WhatsAppOrder {
   id: string;
   store_id: string;
   offer_id: string | null;
+  product_id?: string | null;
   customer_name: string | null;
   customer_phone: string | null;
   customer_message: string;
@@ -45,6 +46,12 @@ interface WhatsAppOrder {
   offers: {
     title: string;
     discount_text: string | null;
+    images?: any;
+  } | null;
+  products?: {
+    name: string;
+    price: number | null;
+    images?: any;
   } | null;
 }
 
@@ -114,7 +121,8 @@ const WhatsAppOrders = () => {
             address,
             cities (name)
           ),
-          offers (title, discount_text)
+          offers (title, discount_text, images),
+          products (name, price, images)
         `)
         .order("created_at", { ascending: false });
 

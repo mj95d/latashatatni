@@ -138,7 +138,7 @@ const Product = () => {
 
   const productImages = product.images && Array.isArray(product.images) && product.images.length > 0
     ? product.images
-    : [{ url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop' }];
+    : ['https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop'];
 
   const discount = product.old_price && product.price
     ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
@@ -168,13 +168,17 @@ const Product = () => {
             {productImages.length > 1 ? (
               <Carousel className="w-full">
                 <CarouselContent>
-                  {productImages.map((img, index) => (
+                  {productImages.map((imgUrl, index) => (
                     <CarouselItem key={index}>
-                      <div className="relative aspect-square rounded-2xl overflow-hidden">
+                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
                         <img
-                          src={img.url}
+                          src={typeof imgUrl === 'string' ? imgUrl : imgUrl?.url || imgUrl}
                           alt={`${product.name} - صورة ${index + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                          }}
                         />
                         {discount && index === 0 && (
                           <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl">
@@ -190,11 +194,15 @@ const Product = () => {
                 <CarouselNext className="right-4" />
               </Carousel>
             ) : (
-              <div className="relative aspect-square rounded-2xl overflow-hidden">
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
                 <img
-                  src={productImages[0].url}
+                  src={typeof productImages[0] === 'string' ? productImages[0] : productImages[0]?.url || productImages[0]}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                  }}
                 />
                 {discount && (
                   <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl">

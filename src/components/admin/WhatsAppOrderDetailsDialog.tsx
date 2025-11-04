@@ -19,6 +19,7 @@ interface WhatsAppOrderDetailsDialogProps {
     id: string;
     store_id: string;
     offer_id: string | null;
+    product_id?: string | null;
     customer_name: string | null;
     customer_phone: string | null;
     customer_message: string;
@@ -42,6 +43,12 @@ interface WhatsAppOrderDetailsDialogProps {
     offers: {
       title: string;
       discount_text: string | null;
+      images?: any;
+    } | null;
+    products?: {
+      name: string;
+      price: number | null;
+      images?: any;
     } | null;
   } | null;
   open: boolean;
@@ -170,13 +177,13 @@ export const WhatsAppOrderDetailsDialog = ({
             </div>
           </div>
 
-          {/* معلومات المتجر والعرض */}
+          {/* معلومات المتجر والعرض/المنتج */}
           <div className="p-6 bg-card/50 rounded-xl border-2 border-border/50">
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <Store className="w-5 h-5 text-primary" />
-              معلومات المتجر والعرض
+              معلومات المتجر والطلب
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Store className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">المتجر:</span>
@@ -185,16 +192,71 @@ export const WhatsAppOrderDetailsDialog = ({
                   <Badge variant="outline">{order.stores.cities.name}</Badge>
                 )}
               </div>
-              {order.offers && (
-                <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">العرض:</span>
-                  <span className="font-semibold">{order.offers.title}</span>
-                  {order.offers.discount_text && (
-                    <Badge className="bg-secondary">{order.offers.discount_text}</Badge>
-                  )}
+
+              {/* عرض صور وتفاصيل المنتج */}
+              {order.products && (
+                <div className="p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex gap-4">
+                    {order.products.images && Array.isArray(order.products.images) && order.products.images.length > 0 && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={typeof order.products.images[0] === 'string' ? order.products.images[0] : order.products.images[0]?.url}
+                          alt={order.products.name}
+                          className="w-24 h-24 object-cover rounded-lg border-2 border-border"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">المنتج:</span>
+                        <span className="font-semibold">{order.products.name}</span>
+                      </div>
+                      {order.products.price && (
+                        <p className="text-lg font-bold text-primary">
+                          {order.products.price} ريال
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* عرض صور وتفاصيل العرض */}
+              {order.offers && (
+                <div className="p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex gap-4">
+                    {order.offers.images && Array.isArray(order.offers.images) && order.offers.images.length > 0 && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={order.offers.images.find((img: any) => img.is_primary)?.url || order.offers.images[0]?.url || order.offers.images[0]}
+                          alt={order.offers.title}
+                          className="w-24 h-24 object-cover rounded-lg border-2 border-border"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">العرض:</span>
+                        <span className="font-semibold">{order.offers.title}</span>
+                      </div>
+                      {order.offers.discount_text && (
+                        <Badge className="bg-secondary">{order.offers.discount_text}</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {order.stores?.address && (
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
