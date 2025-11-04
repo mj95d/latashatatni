@@ -102,6 +102,22 @@ const Product = () => {
         return;
       }
 
+      // Ensure images are always an array of URLs
+      if (data.images) {
+        if (Array.isArray(data.images)) {
+          // Already an array, good
+          data.images = data.images.map((img: any) => 
+            typeof img === 'string' ? img : (img as any)?.url || img
+          );
+        } else if (typeof data.images === 'string') {
+          // Single URL string, convert to array
+          data.images = [data.images];
+        } else if (typeof data.images === 'object' && (data.images as any).url) {
+          // Object with url property
+          data.images = [(data.images as any).url];
+        }
+      }
+
       setProduct(data);
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -236,16 +252,18 @@ const Product = () => {
                 <CarouselContent>
                   {productImages.map((imgUrl, index) => (
                     <CarouselItem key={index}>
-                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-                        <img
-                          src={typeof imgUrl === 'string' ? imgUrl : imgUrl?.url || imgUrl}
-                          alt={`${product.name} - صورة ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
-                          }}
-                        />
+                       <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+                         <img
+                           src={typeof imgUrl === 'string' ? imgUrl : (imgUrl as any)?.url || String(imgUrl)}
+                           alt={`${product.name} - صورة ${index + 1}`}
+                           loading="lazy"
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             const target = e.target as HTMLImageElement;
+                             target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                             console.error('Failed to load image:', imgUrl);
+                           }}
+                         />
                         {discount && index === 0 && (
                           <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground font-bold text-xl px-6 py-3 shadow-xl">
                             <Tag className="w-5 h-5 ml-2" />
@@ -262,12 +280,14 @@ const Product = () => {
             ) : (
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
                 <img
-                  src={typeof productImages[0] === 'string' ? productImages[0] : productImages[0]?.url || productImages[0]}
+                  src={typeof productImages[0] === 'string' ? productImages[0] : (productImages[0] as any)?.url || String(productImages[0])}
                   alt={product.name}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                    console.error('Failed to load image:', productImages[0]);
                   }}
                 />
                 {discount && (

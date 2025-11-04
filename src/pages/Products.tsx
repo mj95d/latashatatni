@@ -234,7 +234,7 @@ const Products = () => {
                 : null;
               
               const primaryImage = product.images && Array.isArray(product.images) && product.images.length > 0
-                ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || product.images[0])
+                ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url || String(product.images[0]))
                 : 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
 
               const cityName = product.stores?.cities?.name || 'غير محدد';
@@ -263,10 +263,12 @@ const Products = () => {
                     <img
                       src={primaryImage}
                       alt={product.name}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
+                        console.error('Failed to load product image:', primaryImage);
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
