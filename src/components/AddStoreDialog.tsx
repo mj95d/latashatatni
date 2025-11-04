@@ -195,7 +195,8 @@ export const AddStoreDialog = ({ open, onOpenChange, onSuccess }: AddStoreDialog
           longitude: formData.longitude,
           logo_url: logoUrl,
           commercial_document: documentUrl,
-          is_active: false // سيتم تفعيله بعد مراجعة الأدمن
+          is_active: true,
+          approved: false
         }]);
 
       if (error) throw error;

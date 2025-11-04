@@ -71,6 +71,8 @@ const Merchant = () => {
         return;
       }
 
+      console.log("Fetching stores for user:", user.id);
+
       const { data, error } = await supabase
         .from("stores")
         .select(`
@@ -96,6 +98,7 @@ const Merchant = () => {
         return;
       }
 
+      console.log("Fetched stores:", data);
       setStores(data || []);
       if (data && data.length > 0 && !selectedStoreId) {
         setSelectedStoreId(data[0].id);
