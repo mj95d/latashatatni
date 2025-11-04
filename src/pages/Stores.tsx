@@ -117,11 +117,11 @@ const Stores = () => {
         `);
 
       if (user) {
-        // Show approved active stores for everyone, plus the current user's stores (even if pending approval)
-        storesQuery = storesQuery.or(`and(is_active.eq.true,approved.eq.true),owner_id.eq.${user.id}`);
+        // Show active stores for everyone, plus the current user's stores (even if not approved yet)
+        storesQuery = storesQuery.or(`is_active.eq.true,owner_id.eq.${user.id}`);
       } else {
-        // Public visitors see only approved and active stores
-        storesQuery = storesQuery.eq('is_active', true).eq('approved', true);
+        // Public visitors see all active stores (no approval requirement)
+        storesQuery = storesQuery.eq('is_active', true);
       }
 
       const { data: storesData, error: storesError } = await storesQuery;
