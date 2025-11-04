@@ -89,8 +89,28 @@ const StoreView = () => {
         navigate("/stores");
         return;
       }
+      
+      // Sign private logo/cover URLs so they render correctly
+      const signIfNeeded = async (url: string | null) => {
+        if (!url) return url;
+        if (url.startsWith('http')) return url;
+        if (url.includes('/object/public/store-documents/')) {
+          const path = url.split('/object/public/store-documents/')[1];
+          const { data: signed } = await supabase.storage
+            .from('store-documents')
+            .createSignedUrl(path, 60 * 60);
+          return signed?.signedUrl || url;
+        }
+        const { data: signed } = await supabase.storage
+          .from('store-documents')
+          .createSignedUrl(url, 60 * 60);
+        return signed?.signedUrl || url;
+      };
 
-      setStore(data);
+      const signedLogo = await signIfNeeded(data.logo_url);
+      const signedCover = await signIfNeeded(data.cover_url);
+
+      setStore({ ...(data as any), logo_url: signedLogo, cover_url: signedCover });
     } catch (error) {
       console.error("Error fetching store:", error);
       showToast({
@@ -198,7 +218,12 @@ const StoreView = () => {
                   <img
                     src={store.logo_url}
                     alt={store.name}
+                    loading="lazy"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load store logo:', store.logo_url);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -321,13 +346,14 @@ const StoreView = () => {
                   <div className="relative h-48 bg-muted">
                     {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
                       <img
-                        src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || product.images[0]}
+                        src={typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url || String(product.images[0])}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.onerror = null;
                           target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop';
+                          console.error('Failed to load product image in store view:', product.images[0]);
                         }}
                       />
                     ) : (
