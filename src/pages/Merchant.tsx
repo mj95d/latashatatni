@@ -17,6 +17,7 @@ import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
 import { ProductsManager } from "@/components/merchant/ProductsManager";
 import MapPicker from "@/components/MapPicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -468,7 +469,36 @@ const Merchant = () => {
                     </Button>
                   </div>
                 ) : (
-                  <ProductsManager storeId={selectedStoreId || stores[0]?.id} />
+                  <div className="space-y-6">
+                    {/* Store Selector */}
+                    <div className="flex items-center justify-between gap-4 p-4 bg-muted/30 rounded-xl border">
+                      <div className="flex items-center gap-3">
+                        <Store className="w-5 h-5 text-primary" />
+                        <span className="font-semibold">اختر المتجر:</span>
+                      </div>
+                      <Select
+                        value={selectedStoreId || stores[0]?.id}
+                        onValueChange={(value) => setSelectedStoreId(value)}
+                      >
+                        <SelectTrigger className="w-[300px]">
+                          <SelectValue placeholder="اختر متجر" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stores.map((store) => (
+                            <SelectItem key={store.id} value={store.id}>
+                              <div className="flex items-center gap-2">
+                                <Store className="w-4 h-4" />
+                                {store.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Products Manager */}
+                    <ProductsManager storeId={selectedStoreId || stores[0]?.id} />
+                  </div>
                 )}
               </Card>
             </TabsContent>

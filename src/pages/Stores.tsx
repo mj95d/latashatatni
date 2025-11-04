@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ interface Category {
 }
 
 const Stores = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [stores, setStores] = useState<Store[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -370,6 +371,7 @@ const Stores = () => {
                     key={store.id}
                     className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40 animate-fade-in"
                     style={{ animationDelay: `${index * 100}ms` }}
+                    onClick={() => navigate(`/store/${store.id}`)}
                   >
                     {/* Image */}
                     <div className="relative h-52 overflow-hidden bg-muted">
@@ -431,26 +433,21 @@ const Stores = () => {
 
                       {/* Actions */}
                       <div className="grid grid-cols-2 gap-2 pt-2">
-                        {store.latitude && store.longitude && (
-                          <Button 
-                            asChild
-                            variant="default" 
-                            className="w-full"
-                          >
-                            <a
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={`المسار إلى ${store.name}`}
-                            >
-                              <MapPin className="w-4 h-4 ml-1" />
-                              المسار
-                            </a>
-                          </Button>
-                        )}
+                        <Button 
+                          variant="default" 
+                          className="w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/store/${store.id}`);
+                          }}
+                        >
+                          <Store className="w-4 h-4 ml-1" />
+                          عرض المتجر
+                        </Button>
                         {store.phone && (
                           <Button 
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               const { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP } = await import("@/lib/whatsapp");
                               const { supabase } = await import("@/integrations/supabase/client");
                               
