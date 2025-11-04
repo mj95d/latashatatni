@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { AddStoreDialog } from "@/components/AddStoreDialog";
 import { SubscriptionAlert } from "@/components/SubscriptionAlert";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
+import { ProductsManager } from "@/components/merchant/ProductsManager";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -242,10 +243,14 @@ const Merchant = () => {
           </div>
 
           <Tabs defaultValue="stores" className="max-w-6xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3 h-14 mb-8">
+            <TabsList className="grid w-full grid-cols-4 h-14 mb-8">
               <TabsTrigger value="stores" className="text-base">
                 <Store className="w-4 h-4 ml-2" />
                 متاجري
+              </TabsTrigger>
+              <TabsTrigger value="products" className="text-base">
+                <Store className="w-4 h-4 ml-2" />
+                منتجاتي
               </TabsTrigger>
               <TabsTrigger value="offers" className="text-base">
                 <CheckCircle className="w-4 h-4 ml-2" />
@@ -280,6 +285,26 @@ const Merchant = () => {
                     تصفح المتاجر
                   </Button>
                 </div>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="products" className="mt-8">
+              <Card className="p-8 border-2">
+                {stores.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Store className="w-20 h-20 mx-auto mb-6 text-muted-foreground/50" />
+                    <h4 className="text-xl font-semibold mb-3">أضف متجراً أولاً</h4>
+                    <p className="text-muted-foreground mb-6">
+                      يجب إضافة متجر قبل إضافة المنتجات
+                    </p>
+                    <Button onClick={() => setShowAddStoreDialog(true)} size="lg">
+                      <Store className="w-4 h-4 ml-2" />
+                      إضافة متجر
+                    </Button>
+                  </div>
+                ) : (
+                  <ProductsManager storeId={selectedStoreId || stores[0]?.id} />
+                )}
               </Card>
             </TabsContent>
 
