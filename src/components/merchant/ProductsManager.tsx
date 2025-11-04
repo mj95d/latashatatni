@@ -16,6 +16,8 @@ import {
   Image as ImageIcon,
   Eye,
   EyeOff,
+  Star,
+  GripVertical,
 } from "lucide-react";
 import {
   Dialog,
@@ -48,11 +50,16 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     old_price: "",
+    quantity: "1",
+    category: "",
   });
 
   useEffect(() => {
@@ -81,10 +88,39 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    if (selectedFiles.length + files.length > 8) {
+    if (selectedFiles.length + files.length > 10) {
       toast({
         title: "تحذير",
-        description: "الحد الأقصى 8 صور لكل منتج",
+        description: "الحد الأقصى 10 صور لكل منتج",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFiles([...selectedFiles, ...files]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+
+    if (selectedFiles.length + files.length > 10) {
+      toast({
+        title: "تحذير",
+        description: "الحد الأقصى 10 صور لكل منتج",
         variant: "destructive",
       });
       return;
@@ -94,18 +130,62 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    
+    if (primaryImageIndex === index) {
+      setPrimaryImageIndex(0);
+    } else if (primaryImageIndex > index) {
+      setPrimaryImageIndex(primaryImageIndex - 1);
+    }
+  };
+
+  const setPrimaryImage = (index: number) => {
+    setPrimaryImageIndex(index);
+  };
+
+  const handleImageDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newFiles = [...selectedFiles];
+    const draggedFile = newFiles[draggedIndex];
+    newFiles.splice(draggedIndex, 1);
+    newFiles.splice(index, 0, draggedFile);
+
+    // Update primary image index if needed
+    if (primaryImageIndex === draggedIndex) {
+      setPrimaryImageIndex(index);
+    } else if (primaryImageIndex === index) {
+      setPrimaryImageIndex(draggedIndex);
+    }
+
+    setSelectedFiles(newFiles);
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const uploadImages = async () => {
     const uploadedUrls: string[] = [];
 
-    for (const file of selectedFiles) {
+    // Upload images in order, with primary image first
+    const orderedFiles = [...selectedFiles];
+    const primaryFile = orderedFiles.splice(primaryImageIndex, 1)[0];
+    orderedFiles.unshift(primaryFile);
+
+    for (const file of orderedFiles) {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
       const filePath = `${storeId}/${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("product-images")
         .upload(filePath, file);
 
@@ -163,8 +243,9 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
         description: "تم إضافة المنتج بنجاح",
       });
 
-      setFormData({ name: "", description: "", price: "", old_price: "" });
+      setFormData({ name: "", description: "", price: "", old_price: "", quantity: "1", category: "" });
       setSelectedFiles([]);
+      setPrimaryImageIndex(0);
       setIsDialogOpen(false);
       fetchProducts();
     } catch (error: any) {
@@ -255,65 +336,131 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>إضافة منتج جديد</DialogTitle>
+              <DialogTitle className="text-2xl font-bold">إضافة منتج جديد</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                املأ المعلومات التالية. جميع الحقول المطلوبة مشار إليها بـ *
+              </p>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>اسم المنتج *</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="مثال: كابتشينو"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="وصف المنتج..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* القسم 1: المعلومات الأساسية */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                  المعلومات الأساسية
+                </h3>
+                
                 <div className="space-y-2">
-                  <Label>السعر الحالي (ريال) *</Label>
+                  <Label htmlFor="product-name">اسم المنتج *</Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
+                    id="product-name"
+                    value={formData.name}
                     onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
+                      setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="16.00"
+                    placeholder="مثال: كرسي جلد فاخر"
                     required
+                    className="text-base"
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="product-price">السعر الحالي (ريال) *</Label>
+                    <Input
+                      id="product-price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      placeholder="350.00"
+                      required
+                      className="text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="product-old-price">السعر قبل الخصم (اختياري)</Label>
+                    <Input
+                      id="product-old-price"
+                      type="number"
+                      step="0.01"
+                      value={formData.old_price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, old_price: e.target.value })
+                      }
+                      placeholder="450.00"
+                      className="text-base"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="product-category">التصنيف (اختياري)</Label>
+                    <Input
+                      id="product-category"
+                      value={formData.category}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
+                      placeholder="مثال: أثاث، إلكترونيات"
+                      className="text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="product-quantity">الكمية المتوفرة</Label>
+                    <Input
+                      id="product-quantity"
+                      type="number"
+                      min="0"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      placeholder="1"
+                      className="text-base"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label>السعر القديم (اختياري)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.old_price}
+                  <Label htmlFor="product-description">وصف مختصر</Label>
+                  <Textarea
+                    id="product-description"
+                    value={formData.description}
                     onChange={(e) =>
-                      setFormData({ ...formData, old_price: e.target.value })
+                      setFormData({ ...formData, description: e.target.value })
                     }
-                    placeholder="20.00"
+                    placeholder="وصف قصير عن المنتج وأهم مميزاته..."
+                    rows={3}
+                    className="text-base resize-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>صور المنتج (1-8 صور) *</Label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+              {/* القسم 2: رفع الصور */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    صور المنتج
+                  </h3>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedFiles.length} / 10 صور
+                  </span>
+                </div>
+
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                    isDragging 
+                      ? 'border-primary bg-primary/5 scale-[1.02]' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -324,50 +471,127 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
+                    className="cursor-pointer flex flex-col items-center gap-3"
                   >
-                    <Upload className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      اضغط لاختيار الصور
-                    </p>
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-base font-medium mb-1">
+                        اسحب الصور هنا أو اضغط للرفع
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        يمكنك رفع حتى 10 صور (JPG, PNG, WEBP)
+                      </p>
+                    </div>
                   </label>
                 </div>
 
                 {selectedFiles.length > 0 && (
-                  <div className="grid grid-cols-4 gap-4 mt-4">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <GripVertical className="w-4 h-4" />
+                      اسحب الصور لإعادة الترتيب • اضغط على النجمة لتعيين الصورة الرئيسية
+                    </p>
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                      {selectedFiles.map((file, index) => (
+                        <div 
+                          key={index} 
+                          className={`relative group cursor-move transition-all ${
+                            draggedIndex === index ? 'opacity-50 scale-95' : ''
+                          }`}
+                          draggable
+                          onDragStart={() => handleImageDragStart(index)}
+                          onDragOver={(e) => handleImageDragOver(e, index)}
+                          onDragEnd={handleImageDragEnd}
                         >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                            primaryImageIndex === index 
+                              ? 'border-primary ring-2 ring-primary/20' 
+                              : 'border-transparent'
+                          }`}>
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`معاينة ${index + 1}`}
+                              className="w-full h-24 object-cover"
+                            />
+                            
+                            {/* Primary Image Star */}
+                            <button
+                              type="button"
+                              onClick={() => setPrimaryImage(index)}
+                              className={`absolute top-1 left-1 p-1.5 rounded-full transition-all ${
+                                primaryImageIndex === index
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-black/50 text-white hover:bg-primary hover:scale-110'
+                              }`}
+                              title={primaryImageIndex === index ? 'الصورة الرئيسية' : 'تعيين كصورة رئيسية'}
+                            >
+                              <Star className={`w-3 h-3 ${primaryImageIndex === index ? 'fill-current' : ''}`} />
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                              title="حذف الصورة"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+
+                            {/* Drag Handle */}
+                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <GripVertical className="w-4 h-4 text-white drop-shadow-lg" />
+                            </div>
+                          </div>
+                          
+                          {primaryImageIndex === index && (
+                            <p className="text-xs text-center text-primary font-medium mt-1">
+                              رئيسية
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={uploading}>
-                {uploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                    جاري الرفع...
-                  </>
-                ) : (
-                  <>
-                    <Package className="w-4 h-4 ml-2" />
-                    إضافة المنتج
-                  </>
-                )}
-              </Button>
+              {/* أزرار التحكم */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  type="submit" 
+                  className="flex-1 h-12 text-base" 
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 ml-2 animate-spin" />
+                      جاري الرفع...
+                    </>
+                  ) : (
+                    <>
+                      <Package className="w-5 h-5 ml-2" />
+                      حفظ المنتج
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormData({ name: "", description: "", price: "", old_price: "", quantity: "1", category: "" });
+                    setSelectedFiles([]);
+                    setPrimaryImageIndex(0);
+                    setIsDialogOpen(false);
+                  }}
+                  disabled={uploading}
+                  className="h-12 px-6"
+                >
+                  إلغاء
+                </Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
