@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { processImage } from "@/lib/imageUtils";
 import {
   Package,
   Plus,
@@ -18,6 +19,7 @@ import {
   EyeOff,
   Star,
   GripVertical,
+  Copy,
 } from "lucide-react";
 import {
   Dialog,
@@ -53,6 +55,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [storeName, setStoreName] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -65,8 +68,25 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   useEffect(() => {
     if (storeId) {
       fetchProducts();
+      fetchStoreName();
     }
   }, [storeId]);
+
+  const fetchStoreName = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("name")
+        .eq("id", storeId)
+        .single();
+
+      if (error) throw error;
+      setStoreName(data?.name || "متجرك");
+    } catch (error) {
+      console.error("Error fetching store name:", error);
+      setStoreName("متجرك");
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -206,27 +226,33 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     const primaryFile = orderedFiles.splice(primaryImageIndex, 1)[0];
     orderedFiles.unshift(primaryFile);
 
-    for (const file of orderedFiles) {
+    toast({
+      title: "جاري معالجة الصور...",
+      description: "ضغط الصور وإضافة العلامة المائية",
+    });
+
+    for (let i = 0; i < orderedFiles.length; i++) {
+      const file = orderedFiles[i];
+      
       // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
       if (!validTypes.includes(file.type)) {
         throw new Error(`نوع الملف ${file.name} غير مدعوم. استخدم JPG, PNG أو WEBP`);
       }
 
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error(`حجم الملف ${file.name} كبير جداً. الحد الأقصى 5 ميجابايت`);
-      }
+      // Process image: compress + watermark
+      const processedFile = await processImage(file, storeName);
 
-      const fileExt = file.name.split(".").pop();
+      const fileExt = 'jpg'; // Always save as JPG after processing
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${storeId}/${fileName}`;
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("product-images")
-        .upload(filePath, file, {
+        .upload(filePath, processedFile, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: 'image/jpeg'
         });
 
       if (uploadError) {
@@ -399,6 +425,48 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     } catch (error: any) {
       toast({
         title: "خطأ",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDuplicate = async (product: Product) => {
+    if (products.length >= 10) {
+      toast({
+        title: "تحذير",
+        description: "لقد وصلت للحد الأقصى من المنتجات (10 منتجات)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: duplicatedProduct, error } = await supabase
+        .from("products")
+        .insert({
+          store_id: storeId,
+          name: `${product.name} (نسخة)`,
+          description: product.description,
+          price: product.price,
+          old_price: product.old_price,
+          images: product.images,
+          is_active: false, // Start as inactive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "تم النسخ ✓",
+        description: `تم نسخ ${product.name} بنجاح`,
+      });
+
+      fetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "خطأ في النسخ",
         description: error.message,
         variant: "destructive",
       });
@@ -766,6 +834,14 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
                         تفعيل
                       </>
                     )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDuplicate(product)}
+                    title="نسخ المنتج"
+                  >
+                    <Copy className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"
