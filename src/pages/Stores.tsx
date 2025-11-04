@@ -153,21 +153,33 @@ const Stores = () => {
           let cover = s.cover_url as string | null;
           let logo = s.logo_url as string | null;
 
-          const signIfNeeded = async (url: string | null) => {
-            if (!url) return url;
-            if (url.startsWith('http')) return url;
-            // Handle legacy saved public URLs
-            if (url.includes('/object/public/store-documents/')) {
-              const path = url.split('/object/public/store-documents/')[1];
+          const signIfNeeded = async (raw: string | null) => {
+            if (!raw) return raw;
+            const url = String(raw);
+            const BUCKET = 'store-documents';
+
+            // If this is a Supabase storage URL (public/authenticated/signed), extract the object path and sign it
+            const bucketSegment = `/store-documents/`;
+            if (url.includes(bucketSegment)) {
+              const afterBucket = url.split(bucketSegment)[1] || '';
+              const path = decodeURIComponent(afterBucket.split('?')[0]);
               const { data: signed } = await supabase.storage
-                .from('store-documents')
+                .from(BUCKET)
                 .createSignedUrl(path, 60 * 60);
               return signed?.signedUrl || url;
             }
-            const { data: signed } = await supabase.storage
-              .from('store-documents')
-              .createSignedUrl(url, 60 * 60);
-            return signed?.signedUrl || url;
+
+            // If it's a relative object path saved in DB, sign it
+            if (!url.startsWith('http')) {
+              const path = url.replace(/^\/+/, '');
+              const { data: signed } = await supabase.storage
+                .from(BUCKET)
+                .createSignedUrl(path, 60 * 60);
+              return signed?.signedUrl || url;
+            }
+
+            // External HTTP(S) URL that's not our storage - use as is
+            return url;
           };
 
           cover = await signIfNeeded(cover);
