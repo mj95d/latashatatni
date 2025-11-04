@@ -114,7 +114,8 @@ const Stores = () => {
           *,
           cities(name),
           categories(name)
-        `);
+        `)
+        .order('created_at', { ascending: false });
 
       if (user) {
         // Show active stores for everyone, plus the current user's stores (even if not approved yet)
