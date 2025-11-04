@@ -17,19 +17,16 @@ import {
   Image as ImageIcon,
   Eye,
   EyeOff,
-  Star,
-  GripVertical,
   Copy,
-  Settings2,
+  Check,
   Sparkles,
-  Zap,
+  Camera,
 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -43,6 +40,7 @@ interface Product {
   old_price: number | null;
   images: any;
   is_active: boolean;
+  sku: string | null;
   created_at: string;
 }
 
@@ -57,10 +55,9 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [storeName, setStoreName] = useState("");
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
   const [imageOptions, setImageOptions] = useState({
     enableCompression: true,
     enableWatermark: true,
@@ -71,8 +68,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     description: "",
     price: "",
     old_price: "",
-    quantity: "1",
-    category: "",
+    sku: "",
   });
 
   useEffect(() => {
@@ -100,195 +96,102 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
 
   const fetchProducts = async () => {
     try {
-      if (!storeId) {
-        console.warn("No store ID provided");
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("store_id", storeId)
-        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching products:", error);
-        toast({
-          title: "خطأ في تحميل المنتجات",
-          description: error.message,
-          variant: "destructive",
-        });
-        setProducts([]);
-      } else {
-        setProducts(data || []);
-      }
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error: any) {
       console.error("Error fetching products:", error);
       toast({
         title: "خطأ",
-        description: error.message || "حدث خطأ في تحميل المنتجات",
+        description: "فشل في تحميل المنتجات",
         variant: "destructive",
       });
-      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Generate unique SKU
+  const generateSKU = () => {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+    return `PRD-${timestamp}-${random}`;
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
-    if (selectedFiles.length + files.length > 10) {
+    if (files.length === 0) return;
+
+    // Validate file types
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const invalidFiles = files.filter((f) => !validTypes.includes(f.type));
+
+    if (invalidFiles.length > 0) {
       toast({
-        title: "تحذير",
-        description: "الحد الأقصى 10 صور لكل منتج",
+        title: "خطأ",
+        description: "يُسمح فقط بملفات الصور (JPG, PNG, WEBP)",
         variant: "destructive",
       });
       return;
     }
 
-    setSelectedFiles([...selectedFiles, ...files]);
+    // Add new files to existing ones
+    const newFiles = [...selectedFiles, ...files];
+    setSelectedFiles(newFiles);
+
+    // Create preview URLs
+    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
+    setPreviewUrls([...previewUrls, ...newPreviewUrls]);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type.startsWith('image/')
-    );
-
-    if (selectedFiles.length + files.length > 10) {
-      toast({
-        title: "تحذير",
-        description: "الحد الأقصى 10 صور لكل منتج",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFiles([...selectedFiles, ...files]);
-  };
-
-  const removeFile = (index: number) => {
+  const removeImage = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
+    const newPreviews = previewUrls.filter((_, i) => i !== index);
     
-    if (primaryImageIndex === index) {
-      setPrimaryImageIndex(0);
-    } else if (primaryImageIndex > index) {
-      setPrimaryImageIndex(primaryImageIndex - 1);
-    }
-  };
-
-  const setPrimaryImage = (index: number) => {
-    setPrimaryImageIndex(index);
-  };
-
-  const handleImageDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleImageDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newFiles = [...selectedFiles];
-    const draggedFile = newFiles[draggedIndex];
-    newFiles.splice(draggedIndex, 1);
-    newFiles.splice(index, 0, draggedFile);
-
-    // Update primary image index if needed
-    if (primaryImageIndex === draggedIndex) {
-      setPrimaryImageIndex(index);
-    } else if (primaryImageIndex === index) {
-      setPrimaryImageIndex(draggedIndex);
-    }
-
+    // Revoke the URL to free memory
+    URL.revokeObjectURL(previewUrls[index]);
+    
     setSelectedFiles(newFiles);
-    setDraggedIndex(index);
+    setPreviewUrls(newPreviews);
   };
 
-  const handleImageDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
-  const uploadImages = async () => {
+  const uploadImages = async (): Promise<string[]> => {
     const uploadedUrls: string[] = [];
 
-    if (!storeId) {
-      throw new Error("معرّف المتجر غير موجود");
-    }
-
-    // Upload images in order, with primary image first
-    const orderedFiles = [...selectedFiles];
-    const primaryFile = orderedFiles.splice(primaryImageIndex, 1)[0];
-    orderedFiles.unshift(primaryFile);
-
-    const processingSteps: string[] = [];
-    if (imageOptions.enableCompression) processingSteps.push("ضغط الصور");
-    if (imageOptions.enableWatermark) processingSteps.push("إضافة العلامة المائية");
-    
-    if (processingSteps.length > 0) {
-      toast({
-        title: "جاري معالجة الصور...",
-        description: processingSteps.join(" و "),
-      });
-    }
-
-    for (let i = 0; i < orderedFiles.length; i++) {
-      const file = orderedFiles[i];
-      
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
-      if (!validTypes.includes(file.type)) {
-        throw new Error(`نوع الملف ${file.name} غير مدعوم. استخدم JPG, PNG أو WEBP`);
-      }
-
-      // Process image based on options
-      const processedFile = await processImage(
-        file, 
-        storeName,
-        {
+    for (const file of selectedFiles) {
+      try {
+        const processedFile = await processImage(file, storeName, {
           enableCompression: imageOptions.enableCompression,
           enableWatermark: imageOptions.enableWatermark,
           compressionQuality: imageOptions.compressionQuality,
-        }
-      );
-
-      const fileExt = 'jpg'; // Always save as JPG after processing
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${storeId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(filePath, processedFile, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: 'image/jpeg'
         });
 
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw new Error(`فشل رفع ${file.name}: ${uploadError.message}`);
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${storeId}/${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(fileName, processedFile);
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("product-images").getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      } catch (error: any) {
+        console.error("Error uploading image:", error);
+        throw error;
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(filePath);
-
-      uploadedUrls.push(publicUrl);
     }
 
     return uploadedUrls;
@@ -296,30 +199,11 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.name?.trim()) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال اسم المنتج",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    if (!formData.price || parseFloat(formData.price) <= 0) {
+    if (!formData.name || !formData.price) {
       toast({
         title: "خطأ",
-        description: "يرجى إدخال سعر صحيح",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.old_price && parseFloat(formData.old_price) <= parseFloat(formData.price)) {
-      toast({
-        title: "خطأ",
-        description: "السعر قبل الخصم يجب أن يكون أكبر من السعر الحالي",
+        description: "يرجى إدخال اسم المنتج والسعر على الأقل",
         variant: "destructive",
       });
       return;
@@ -328,16 +212,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     if (selectedFiles.length === 0) {
       toast({
         title: "خطأ",
-        description: "يرجى إضافة صورة واحدة على الأقل",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!storeId) {
-      toast({
-        title: "خطأ",
-        description: "لم يتم تحديد المتجر",
+        description: "يرجى إضافة صورة واحدة على الأقل للمنتج",
         variant: "destructive",
       });
       return;
@@ -349,55 +224,51 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       // Upload images
       const imageUrls = await uploadImages();
 
-      if (!imageUrls || imageUrls.length === 0) {
-        throw new Error("فشل رفع الصور");
-      }
+      // Generate SKU if not provided
+      const productSku = formData.sku.trim() || generateSKU();
 
-      // Insert product
-      const { data: insertedProduct, error: insertError } = await supabase
+      // Insert product - is_active is true by default in database
+      const { data, error } = await supabase
         .from("products")
         .insert({
           store_id: storeId,
-          name: formData.name.trim(),
-          description: formData.description?.trim() || null,
+          name: formData.name,
+          description: formData.description || null,
           price: parseFloat(formData.price),
           old_price: formData.old_price ? parseFloat(formData.old_price) : null,
+          sku: productSku,
           images: imageUrls,
-          is_active: true
+          is_active: true, // Product goes live immediately
         })
         .select()
         .single();
 
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw new Error(insertError.message || "فشل إضافة المنتج");
-      }
+      if (error) throw error;
 
       toast({
-        title: "تم بنجاح ✓",
-        description: `تم إضافة ${formData.name} بنجاح`,
+        title: "✅ تم نشر المنتج",
+        description: `تم إضافة "${formData.name}" وهو الآن متاح للعملاء مباشرة!`,
       });
 
       // Reset form
-      setFormData({ 
-        name: "", 
-        description: "", 
-        price: "", 
-        old_price: "", 
-        quantity: "1", 
-        category: "" 
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        old_price: "",
+        sku: "",
       });
       setSelectedFiles([]);
-      setPrimaryImageIndex(0);
+      setPreviewUrls([]);
       setIsDialogOpen(false);
-      
-      // Refresh products
-      await fetchProducts();
+
+      // Refresh products list
+      fetchProducts();
     } catch (error: any) {
-      console.error("Error adding product:", error);
+      console.error("Error creating product:", error);
       toast({
-        title: "خطأ في الإضافة",
-        description: error.message || "حدث خطأ أثناء إضافة المنتج",
+        title: "خطأ",
+        description: error.message || "فشل في إضافة المنتج",
         variant: "destructive",
       });
     } finally {
@@ -405,7 +276,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     }
   };
 
-  const handleToggleActive = async (productId: string, currentStatus: boolean) => {
+  const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from("products")
@@ -415,21 +286,23 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
       if (error) throw error;
 
       toast({
-        title: "تم التحديث",
-        description: !currentStatus ? "تم تفعيل المنتج" : "تم إخفاء المنتج",
+        title: currentStatus ? "تم إخفاء المنتج" : "تم إظهار المنتج",
+        description: currentStatus
+          ? "المنتج غير مرئي للعملاء الآن"
+          : "المنتج مرئي للعملاء الآن",
       });
 
       fetchProducts();
     } catch (error: any) {
       toast({
         title: "خطأ",
-        description: error.message,
+        description: "فشل في تحديث حالة المنتج",
         variant: "destructive",
       });
     }
   };
 
-  const handleDelete = async (productId: string) => {
+  const deleteProduct = async (productId: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
 
     try {
@@ -449,517 +322,174 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     } catch (error: any) {
       toast({
         title: "خطأ",
-        description: error.message,
+        description: "فشل في حذف المنتج",
         variant: "destructive",
       });
     }
   };
 
-  const handleDuplicate = async (product: Product) => {
-    if (products.length >= 10) {
-      toast({
-        title: "تحذير",
-        description: "لقد وصلت للحد الأقصى من المنتجات (10 منتجات)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { data: duplicatedProduct, error } = await supabase
-        .from("products")
-        .insert({
-          store_id: storeId,
-          name: `${product.name} (نسخة)`,
-          description: product.description,
-          price: product.price,
-          old_price: product.old_price,
-          images: product.images,
-          is_active: false, // Start as inactive
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "تم النسخ ✓",
-        description: `تم نسخ ${product.name} بنجاح`,
-      });
-
-      fetchProducts();
-    } catch (error: any) {
-      toast({
-        title: "خطأ في النسخ",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const copySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    setTimeout(() => setCopiedSku(null), 2000);
+    toast({
+      title: "تم النسخ",
+      description: "تم نسخ رقم المنتج",
+    });
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold">منتجاتك</h3>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Package className="h-6 w-6 text-primary" />
+            منتجاتي
+          </h2>
           <p className="text-muted-foreground mt-1">
-            {products.length} / 10 منتجات
+            أضف منتجاتك وستظهر مباشرة للعملاء بدون مراجعة
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" disabled={products.length >= 10}>
-              <Plus className="w-4 h-4 ml-2" />
-              إضافة منتج
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">إضافة منتج جديد</DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                املأ المعلومات التالية. جميع الحقول المطلوبة مشار إليها بـ *
-              </p>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* القسم 1: المعلومات الأساسية */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                  المعلومات الأساسية
-                </h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="product-name">اسم المنتج *</Label>
-                  <Input
-                    id="product-name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="مثال: كرسي جلد فاخر"
-                    required
-                    className="text-base"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="product-price">السعر الحالي (ريال) *</Label>
-                    <Input
-                      id="product-price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      placeholder="350.00"
-                      required
-                      className="text-base"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="product-old-price">السعر قبل الخصم (اختياري)</Label>
-                    <Input
-                      id="product-old-price"
-                      type="number"
-                      step="0.01"
-                      value={formData.old_price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, old_price: e.target.value })
-                      }
-                      placeholder="450.00"
-                      className="text-base"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="product-category">التصنيف (اختياري)</Label>
-                    <Input
-                      id="product-category"
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      placeholder="مثال: أثاث، إلكترونيات"
-                      className="text-base"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="product-quantity">الكمية المتوفرة</Label>
-                    <Input
-                      id="product-quantity"
-                      type="number"
-                      min="0"
-                      value={formData.quantity}
-                      onChange={(e) =>
-                        setFormData({ ...formData, quantity: e.target.value })
-                      }
-                      placeholder="1"
-                      className="text-base"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="product-description">وصف مختصر</Label>
-                  <Textarea
-                    id="product-description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    placeholder="وصف قصير عن المنتج وأهم مميزاته..."
-                    rows={3}
-                    className="text-base resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* القسم 2: رفع الصور */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    صور المنتج
-                  </h3>
-                  <span className="text-sm text-muted-foreground">
-                    {selectedFiles.length} / 10 صور
-                  </span>
-                </div>
-
-                {/* خيارات معالجة الصور */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-4 border border-border">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Settings2 className="w-5 h-5 text-primary" />
-                    <h4 className="font-semibold text-sm">خيارات معالجة الصور</h4>
-                  </div>
-
-                  {/* الضغط التلقائي */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <Label htmlFor="compression" className="font-medium text-sm">
-                          ضغط الصور تلقائياً
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          تقليل حجم الصور لرفع أسرع
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id="compression"
-                      checked={imageOptions.enableCompression}
-                      onCheckedChange={(checked) =>
-                        setImageOptions({ ...imageOptions, enableCompression: checked })
-                      }
-                    />
-                  </div>
-
-                  {/* جودة الضغط */}
-                  {imageOptions.enableCompression && (
-                    <div className="space-y-2 pr-14 animate-in slide-in-from-top-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs text-muted-foreground">
-                          جودة الضغط
-                        </Label>
-                        <span className="text-xs font-medium">
-                          {Math.round(imageOptions.compressionQuality * 100)}%
-                        </span>
-                      </div>
-                      <Slider
-                        value={[imageOptions.compressionQuality]}
-                        onValueChange={([value]) =>
-                          setImageOptions({ ...imageOptions, compressionQuality: value })
-                        }
-                        min={0.5}
-                        max={1}
-                        step={0.1}
-                        className="w-full"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {imageOptions.compressionQuality >= 0.9
-                          ? "جودة عالية (حجم أكبر)"
-                          : imageOptions.compressionQuality >= 0.7
-                          ? "جودة متوسطة (موصى به)"
-                          : "جودة منخفضة (حجم أصغر)"}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* العلامة المائية */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <Label htmlFor="watermark" className="font-medium text-sm">
-                          علامة مائية تلقائية
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          إضافة اسم متجرك على الصور
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id="watermark"
-                      checked={imageOptions.enableWatermark}
-                      onCheckedChange={(checked) =>
-                        setImageOptions({ ...imageOptions, enableWatermark: checked })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div 
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-                    isDragging 
-                      ? 'border-primary bg-primary/5 scale-[1.02]' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center gap-3"
-                  >
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-base font-medium mb-1">
-                        اسحب الصور هنا أو اضغط للرفع
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        يمكنك رفع حتى 10 صور (JPG, PNG, WEBP)
-                      </p>
-                    </div>
-                  </label>
-                </div>
-
-                {selectedFiles.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <GripVertical className="w-4 h-4" />
-                      اسحب الصور لإعادة الترتيب • اضغط على النجمة لتعيين الصورة الرئيسية
-                    </p>
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                      {selectedFiles.map((file, index) => (
-                        <div 
-                          key={index} 
-                          className={`relative group cursor-move transition-all ${
-                            draggedIndex === index ? 'opacity-50 scale-95' : ''
-                          }`}
-                          draggable
-                          onDragStart={() => handleImageDragStart(index)}
-                          onDragOver={(e) => handleImageDragOver(e, index)}
-                          onDragEnd={handleImageDragEnd}
-                        >
-                          <div className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                            primaryImageIndex === index 
-                              ? 'border-primary ring-2 ring-primary/20' 
-                              : 'border-transparent'
-                          }`}>
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt={`معاينة ${index + 1}`}
-                              className="w-full h-24 object-cover"
-                            />
-                            
-                            {/* Primary Image Star */}
-                            <button
-                              type="button"
-                              onClick={() => setPrimaryImage(index)}
-                              className={`absolute top-1 left-1 p-1.5 rounded-full transition-all ${
-                                primaryImageIndex === index
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-black/50 text-white hover:bg-primary hover:scale-110'
-                              }`}
-                              title={primaryImageIndex === index ? 'الصورة الرئيسية' : 'تعيين كصورة رئيسية'}
-                            >
-                              <Star className={`w-3 h-3 ${primaryImageIndex === index ? 'fill-current' : ''}`} />
-                            </button>
-
-                            {/* Delete Button */}
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index)}
-                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-                              title="حذف الصورة"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-
-                            {/* Drag Handle */}
-                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <GripVertical className="w-4 h-4 text-white drop-shadow-lg" />
-                            </div>
-                          </div>
-                          
-                          {primaryImageIndex === index && (
-                            <p className="text-xs text-center text-primary font-medium mt-1">
-                              رئيسية
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* أزرار التحكم */}
-              <div className="flex gap-3 pt-4 border-t">
-                <Button 
-                  type="submit" 
-                  className="flex-1 h-12 text-base" 
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 ml-2 animate-spin" />
-                      جاري الرفع...
-                    </>
-                  ) : (
-                    <>
-                      <Package className="w-5 h-5 ml-2" />
-                      حفظ المنتج
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setFormData({ name: "", description: "", price: "", old_price: "", quantity: "1", category: "" });
-                    setSelectedFiles([]);
-                    setPrimaryImageIndex(0);
-                    setIsDialogOpen(false);
-                  }}
-                  disabled={uploading}
-                  className="h-12 px-6"
-                >
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          size="lg"
+          className="gap-2"
+        >
+          <Plus className="h-5 w-5" />
+          إضافة منتج جديد
+        </Button>
       </div>
 
-      {products.length === 0 ? (
+      {/* Products Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : products.length === 0 ? (
         <Card className="p-12 text-center">
-          <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-          <h4 className="text-xl font-semibold mb-2">لا توجد منتجات</h4>
-          <p className="text-muted-foreground mb-4">
-            ابدأ بإضافة منتجاتك الآن
+          <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">لا توجد منتجات</h3>
+          <p className="text-muted-foreground mb-6">
+            ابدأ بإضافة منتجك الأول الآن
           </p>
+          <Button onClick={() => setIsDialogOpen(true)} size="lg">
+            <Plus className="h-5 w-5 ml-2" />
+            إضافة منتج
+          </Button>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <Card key={product.id} className="overflow-hidden group">
-              <div className="relative h-48 bg-muted">
-                {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
+            <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
+              {/* Product Image */}
+              <div className="relative aspect-square bg-muted">
+                {product.images && product.images[0] ? (
                   <img
-                    src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || product.images[0]}
+                    src={product.images[0]}
                     alt={product.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop';
-                    }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="h-16 w-16 text-muted-foreground" />
                   </div>
                 )}
+                
+                {/* Status Badge */}
                 <div className="absolute top-2 right-2">
                   <Badge
                     variant={product.is_active ? "default" : "secondary"}
+                    className="gap-1"
                   >
-                    {product.is_active ? "نشط" : "مخفي"}
+                    {product.is_active ? (
+                      <>
+                        <Eye className="h-3 w-3" />
+                        نشط
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="h-3 w-3" />
+                        مخفي
+                      </>
+                    )}
                   </Badge>
                 </div>
               </div>
 
+              {/* Product Info */}
               <div className="p-4 space-y-3">
-                <h4 className="font-bold text-lg line-clamp-1">{product.name}</h4>
-                {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {product.description}
-                  </p>
+                <div>
+                  <h3 className="font-semibold text-lg line-clamp-1">
+                    {product.name}
+                  </h3>
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* SKU */}
+                {product.sku && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">رقم المنتج:</span>
+                    <code className="bg-muted px-2 py-1 rounded font-mono">
+                      {product.sku}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => copySku(product.sku!)}
+                    >
+                      {copiedSku === product.sku ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold" dir="ltr">
-                    {product.price.toFixed(2)} ر.س
+
+                {/* Price */}
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-primary">
+                    {product.price} ر.س
                   </span>
                   {product.old_price && (
-                    <span className="text-sm line-through text-muted-foreground" dir="ltr">
-                      {product.old_price.toFixed(2)} ر.س
+                    <span className="text-sm text-muted-foreground line-through">
+                      {product.old_price} ر.س
                     </span>
                   )}
                 </div>
 
+                {/* Actions */}
                 <div className="flex gap-2 pt-2">
                   <Button
-                    size="sm"
                     variant="outline"
-                    onClick={() => handleToggleActive(product.id, product.is_active)}
+                    size="sm"
                     className="flex-1"
+                    onClick={() => toggleProductStatus(product.id, product.is_active)}
                   >
                     {product.is_active ? (
                       <>
-                        <EyeOff className="w-4 h-4 ml-2" />
+                        <EyeOff className="h-4 w-4 ml-2" />
                         إخفاء
                       </>
                     ) : (
                       <>
-                        <Eye className="w-4 h-4 ml-2" />
-                        تفعيل
+                        <Eye className="h-4 w-4 ml-2" />
+                        إظهار
                       </>
                     )}
                   </Button>
                   <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDuplicate(product)}
-                    title="نسخ المنتج"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
                     variant="destructive"
-                    onClick={() => handleDelete(product.id)}
+                    size="sm"
+                    onClick={() => deleteProduct(product.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -967,6 +497,259 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
           ))}
         </div>
       )}
+
+      {/* Add Product Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              إضافة منتج جديد
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              سيظهر منتجك مباشرة للعملاء بعد الإضافة
+            </p>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Product Images */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                صور المنتج *
+              </Label>
+              
+              {/* Image Options */}
+              <Card className="p-4 space-y-3 bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="compression" className="text-sm">
+                    ضغط الصور تلقائياً
+                  </Label>
+                  <Switch
+                    id="compression"
+                    checked={imageOptions.enableCompression}
+                    onCheckedChange={(checked) =>
+                      setImageOptions({ ...imageOptions, enableCompression: checked })
+                    }
+                  />
+                </div>
+                
+                {imageOptions.enableCompression && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      جودة الضغط: {Math.round(imageOptions.compressionQuality * 100)}%
+                    </Label>
+                    <Slider
+                      value={[imageOptions.compressionQuality]}
+                      onValueChange={([value]) =>
+                        setImageOptions({ ...imageOptions, compressionQuality: value })
+                      }
+                      min={0.5}
+                      max={1}
+                      step={0.1}
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="watermark" className="text-sm">
+                    إضافة علامة مائية
+                  </Label>
+                  <Switch
+                    id="watermark"
+                    checked={imageOptions.enableWatermark}
+                    onCheckedChange={(checked) =>
+                      setImageOptions({ ...imageOptions, enableWatermark: checked })
+                    }
+                  />
+                </div>
+              </Card>
+
+              {/* Image Upload Area */}
+              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors">
+                <input
+                  type="file"
+                  id="images"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="images"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className="h-10 w-10 text-primary" />
+                  <div>
+                    <p className="font-medium">اضغط لاختيار الصور</p>
+                    <p className="text-sm text-muted-foreground">
+                      أو اسحب الصور هنا (JPG, PNG, WEBP)
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Image Previews */}
+              {previewUrls.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {previewUrls.map((url, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group">
+                      <img
+                        src={url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      {index === 0 && (
+                        <Badge className="absolute bottom-1 left-1 text-xs">
+                          الصورة الرئيسية
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Product Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-base font-semibold">
+                اسم المنتج *
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="مثال: كرسي جلد فاخر"
+                required
+                className="text-base"
+              />
+            </div>
+
+            {/* Product Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-base font-semibold">
+                وصف المنتج
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="اكتب وصفاً مختصراً للمنتج..."
+                rows={3}
+                className="text-base resize-none"
+              />
+            </div>
+
+            {/* Price Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-base font-semibold">
+                  السعر *
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
+                    placeholder="0.00"
+                    required
+                    className="text-base pr-12"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    ر.س
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="old_price" className="text-base font-semibold">
+                  السعر القديم
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="old_price"
+                    type="number"
+                    step="0.01"
+                    value={formData.old_price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, old_price: e.target.value })
+                    }
+                    placeholder="0.00"
+                    className="text-base pr-12"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    ر.س
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SKU */}
+            <div className="space-y-2">
+              <Label htmlFor="sku" className="text-base font-semibold">
+                رقم المنتج (SKU)
+              </Label>
+              <Input
+                id="sku"
+                value={formData.sku}
+                onChange={(e) =>
+                  setFormData({ ...formData, sku: e.target.value })
+                }
+                placeholder="سيتم توليده تلقائياً إذا تركته فارغاً"
+                className="text-base font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                رقم فريد للمنتج يساعدك في تتبع المبيعات والمخزون
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={uploading}
+                className="flex-1"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploading}
+                className="flex-1 gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري النشر...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    نشر المنتج الآن
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

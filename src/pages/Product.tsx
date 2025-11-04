@@ -30,8 +30,9 @@ interface Product {
   description: string | null;
   price: number | null;
   old_price: number | null;
-  images: any; // Using any for Json type compatibility
+  images: any;
   is_active: boolean;
+  sku: string | null;
   store_id: string;
   stores: {
     id: string;
@@ -310,6 +311,17 @@ const Product = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Product SKU */}
+              {product.sku && (
+                <div className="flex items-center gap-2 text-sm bg-muted/50 px-4 py-2 rounded-lg w-fit">
+                  <Package className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">رقم المنتج:</span>
+                  <code className="font-mono font-semibold bg-background px-2 py-1 rounded">
+                    {product.sku}
+                  </code>
+                </div>
+              )}
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mb-6">

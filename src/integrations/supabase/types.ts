@@ -406,6 +406,7 @@ export type Database = {
           name: string
           old_price: number | null
           price: number | null
+          sku: string | null
           store_id: string | null
           updated_at: string | null
         }
@@ -418,6 +419,7 @@ export type Database = {
           name: string
           old_price?: number | null
           price?: number | null
+          sku?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
@@ -430,6 +432,7 @@ export type Database = {
           name?: string
           old_price?: number | null
           price?: number | null
+          sku?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
