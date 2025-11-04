@@ -4,33 +4,93 @@ interface WhatsAppMessageParams {
   storeName: string;
   offerName?: string;
   productName?: string;
+  customerName?: string;
+  customerPhone?: string;
+  deliveryMethod?: string;
+  price?: number;
+  quantity?: number;
+  storePhone?: string;
+  orderId?: string;
 }
 
 /**
- * بناء رسالة واتساب مُهيأة مسبقاً
+ * بناء رسالة واتساب احترافية مُهيأة مسبقاً
  */
 export function buildWhatsAppMessage({ 
   storeName, 
   offerName,
-  productName 
+  productName,
+  customerName,
+  customerPhone,
+  deliveryMethod,
+  price,
+  quantity = 1,
+  storePhone,
+  orderId
 }: WhatsAppMessageParams): string {
-  let message = `السلام عليكم ورحمة الله وبركاته\n\n`;
+  const hasCustomerInfo = customerName || customerPhone || deliveryMethod;
   
-  if (offerName) {
-    message += `أرغب في الاستفسار عن العرض:\n📢 ${offerName}\n\n`;
-  } else if (productName) {
-    message += `أرغب في الاستفسار عن المنتج:\n🛍️ ${productName}\n\n`;
+  let message = `السلام عليكم ورحمة الله وبركاته\n`;
+  message += `أرغب في تقديم طلب جديد عبر منصة *لا تشتتني* ✅\n\n`;
+  
+  // Order ID
+  if (orderId) {
+    message += `🔹 *رقم الطلب:* ${orderId}\n`;
   }
   
-  message += `من المتجر:\n🏪 ${storeName}\n\n`;
-  message += `بياناتي:\n`;
-  message += `الاسم: \n`;
-  message += `رقم الجوال: \n`;
-  message += `المدينة/الحي: \n`;
-  message += `طريقة الاستلام: [ ] توصيل  [ ] استلام من المحل\n\n`;
-  message += `ملاحظات إضافية: `;
+  // Product/Offer Info
+  if (productName) {
+    message += `🔹 *اسم المنتج:* ${productName}\n`;
+  } else if (offerName) {
+    message += `🔹 *العرض:* ${offerName}\n`;
+  }
+  
+  // Quantity & Price
+  if (quantity) {
+    message += `🔹 *الكمية:* ${quantity}\n`;
+  }
+  if (price) {
+    message += `🔹 *السعر:* ${price} ر.س\n`;
+  }
+  
+  message += `\n`;
+  
+  // Store Info
+  message += `🔹 *اسم المتجر:* ${storeName}\n`;
+  if (storePhone) {
+    message += `🔹 *رقم صاحب المتجر:* ${storePhone}\n`;
+  }
+  
+  message += `\n`;
+  
+  // Customer Info
+  if (hasCustomerInfo) {
+    message += `*معلومات التواصل:*\n`;
+    if (customerName) {
+      message += `الاسم: ${customerName}\n`;
+    }
+    if (customerPhone) {
+      message += `رقم الجوال: ${customerPhone}\n`;
+    }
+    if (deliveryMethod) {
+      message += `طريقة الاستلام: ${deliveryMethod}\n`;
+    }
+  } else {
+    message += `*معلومات التواصل:*\n`;
+    message += `الاسم: \n`;
+    message += `رقم الجوال: \n`;
+    message += `المدينة/الحي: \n`;
+    message += `طريقة الاستلام: [ ] توصيل  [ ] استلام من المحل\n`;
+  }
   
   return message;
+}
+
+/**
+ * توليد رقم طلب فريد
+ */
+export function generateOrderId(): string {
+  return `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
 }
 
 /**

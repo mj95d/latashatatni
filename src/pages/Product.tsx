@@ -8,11 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { 
   Store, MapPin, Tag, ArrowRight, MessageSquare, Phone, Star,
-  Truck, ShoppingBag
+  Truck, ShoppingBag, Package, Shield
 } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { toast } from "sonner";
-import { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP } from "@/lib/whatsapp";
+import { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP, generateOrderId } from "@/lib/whatsapp";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Product {
   id: string;
@@ -45,6 +55,13 @@ const Product = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [orderData, setOrderData] = useState({
+    customerName: "",
+    customerPhone: "",
+    deliveryMethod: "delivery",
+    quantity: 1
+  });
 
   useEffect(() => {
     if (id) {
@@ -93,43 +110,76 @@ const Product = () => {
     }
   };
 
-  const handleWhatsAppOrder = async () => {
+  const handleOpenOrderDialog = () => {
+    setIsOrderDialogOpen(true);
+  };
+
+  const handleSubmitOrder = async () => {
     if (!product) {
       toast.error("معلومات المنتج غير متوفرة");
       return;
     }
 
+    // Validation
+    if (!orderData.customerName.trim()) {
+      toast.error("يرجى إدخال الاسم");
+      return;
+    }
+    
+    if (!orderData.customerPhone.trim()) {
+      toast.error("يرجى إدخال رقم الجوال");
+      return;
+    }
+
+    const orderId = generateOrderId();
+    
     const message = buildWhatsAppMessage({
+      orderId,
       storeName: product.stores?.name || "متجر",
-      productName: product.name
+      productName: product.name,
+      customerName: orderData.customerName,
+      customerPhone: orderData.customerPhone,
+      deliveryMethod: orderData.deliveryMethod === "delivery" ? "توصيل" : "استلام من المحل",
+      price: product.price || 0,
+      quantity: orderData.quantity,
+      storePhone: product.stores?.phone || ""
     });
 
     try {
       // تسجيل الطلب في قاعدة البيانات
-      const { data: orderData, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from("whatsapp_orders")
         .insert({
           store_id: product.store_id,
           product_id: product.id,
           offer_id: null,
+          customer_name: orderData.customerName,
+          customer_phone: orderData.customerPhone,
           customer_message: message,
+          delivery_method: orderData.deliveryMethod,
           source_page: "product_page",
           user_agent: navigator.userAgent,
           status: 'NEW'
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) {
         console.error("Error creating order:", orderError);
         throw new Error("فشل تسجيل الطلب");
       }
 
-      // فتح واتساب
-      const whatsappPhone = product.stores?.whatsapp || product.stores?.phone || PLATFORM_WHATSAPP;
-      window.open(buildWhatsAppLink(whatsappPhone, message), '_blank');
+      // فتح واتساب للمنصة
+      window.open(buildWhatsAppLink(PLATFORM_WHATSAPP, message), '_blank');
       
-      toast.success("✓ تم تسجيل طلبك! سيتم التواصل معك قريباً");
+      toast.success("✓ تم إرسال طلبك! سيتم التواصل معك قريباً");
+      
+      // Reset and close
+      setIsOrderDialogOpen(false);
+      setOrderData({
+        customerName: "",
+        customerPhone: "",
+        deliveryMethod: "delivery",
+        quantity: 1
+      });
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast.error(error.message || "حدث خطأ في إرسال الطلب");
@@ -296,15 +346,59 @@ const Product = () => {
               </div>
             </div>
 
+            {/* Quantity Selector */}
+            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl border">
+              <Label className="font-semibold">الكمية:</Label>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOrderData({ ...orderData, quantity: Math.max(1, orderData.quantity - 1) })}
+                  className="w-10 h-10"
+                >
+                  -
+                </Button>
+                <span className="text-lg font-bold min-w-[40px] text-center">
+                  {orderData.quantity}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOrderData({ ...orderData, quantity: orderData.quantity + 1 })}
+                  className="w-10 h-10"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            {/* Total Price */}
+            {product.price && orderData.quantity > 1 && (
+              <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">المجموع:</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {(product.price * orderData.quantity).toFixed(2)} ريال
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Order Button */}
             <Button
-              onClick={handleWhatsAppOrder}
-              className="w-full py-6 text-lg font-bold"
+              onClick={handleOpenOrderDialog}
+              className="w-full py-7 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
               size="lg"
             >
-              <MessageSquare className="w-5 h-5 ml-2" />
+              <MessageSquare className="w-6 h-6 ml-2" />
               اطلب عبر واتساب
             </Button>
+
+            {/* Trust Badge */}
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Shield className="w-4 h-4 text-primary" />
+              <span>طلبك محمي عبر منصة لا تشتتني</span>
+            </div>
 
             {/* Contact Store */}
             {product.stores?.phone && (
@@ -337,39 +431,134 @@ const Product = () => {
         </div>
 
         {/* Additional Info Section */}
-        <Card className="p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">كيف يعمل الطلب؟</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-6 h-6 text-primary" />
+        <Card className="p-8 mb-8 bg-gradient-to-br from-primary/5 to-secondary/5 border-2">
+          <h2 className="text-2xl font-bold mb-6 text-center">كيف يعمل الطلب؟</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center group">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <Package className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">1. اضغط "اطلب عبر واتساب"</h3>
-              <p className="text-sm text-muted-foreground">
-                ستفتح لك رسالة جاهزة على واتساب المنصة
+              <h3 className="font-bold mb-2 text-lg">1. اضغط "اطلب عبر واتساب"</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                ستفتح لك رسالة جاهزة على واتساب المنصة بكل تفاصيل طلبك
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Store className="w-6 h-6 text-primary" />
+            <div className="text-center group">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <Store className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">2. أكمل بياناتك</h3>
-              <p className="text-sm text-muted-foreground">
-                املأ اسمك ورقمك والموقع وطريقة الاستلام
+              <h3 className="font-bold mb-2 text-lg">2. نتواصل مع المتجر</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                نتأكد من توفر المنتج ونعطيك أفضل سعر
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-6 h-6 text-primary" />
+            <div className="text-center group">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <Shield className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">3. سنتواصل معك</h3>
-              <p className="text-sm text-muted-foreground">
-                سنتواصل معك ومع المتجر لتأكيد الطلب
+              <h3 className="font-bold mb-2 text-lg">3. استلم طلبك بأمان</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                طلبك محمي عبر منصتنا من الطلب حتى الاستلام
               </p>
             </div>
           </div>
         </Card>
       </main>
+
+      {/* Order Dialog */}
+      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">إتمام الطلب</DialogTitle>
+            <DialogDescription>
+              أدخل بياناتك لإرسال طلبك عبر واتساب
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Product Summary */}
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Package className="w-5 h-5 text-primary mt-1" />
+                <div className="flex-1">
+                  <p className="font-semibold mb-1">{product?.name}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">الكمية: {orderData.quantity}</span>
+                    {product?.price && (
+                      <span className="font-bold text-primary">
+                        {(product.price * orderData.quantity).toFixed(2)} ر.س
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">الاسم الكامل *</Label>
+              <Input
+                id="name"
+                placeholder="مثال: محمد أحمد"
+                value={orderData.customerName}
+                onChange={(e) => setOrderData({ ...orderData, customerName: e.target.value })}
+                className="h-11"
+              />
+            </div>
+
+            {/* Customer Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">رقم الجوال *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="05XXXXXXXX"
+                value={orderData.customerPhone}
+                onChange={(e) => setOrderData({ ...orderData, customerPhone: e.target.value })}
+                className="h-11"
+                dir="ltr"
+              />
+            </div>
+
+            {/* Delivery Method */}
+            <div className="space-y-3">
+              <Label>طريقة الاستلام *</Label>
+              <RadioGroup 
+                value={orderData.deliveryMethod}
+                onValueChange={(value) => setOrderData({ ...orderData, deliveryMethod: value })}
+              >
+                <div className="flex items-center space-x-2 space-x-reverse p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="delivery" id="delivery" />
+                  <Label htmlFor="delivery" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-primary" />
+                      <span>توصيل</span>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 space-x-reverse p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="pickup" id="pickup" />
+                  <Label htmlFor="pickup" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-primary" />
+                      <span>استلام من المحل</span>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              onClick={handleSubmitOrder}
+              className="w-full h-12 text-base font-bold"
+            >
+              <MessageSquare className="w-5 h-5 ml-2" />
+              إرسال الطلب عبر واتساب
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
