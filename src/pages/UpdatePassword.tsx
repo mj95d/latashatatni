@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, CheckCircle2, XCircle } from "lucide-react";
 import { PasswordStrengthIndicator, validatePassword } from "@/components/PasswordStrengthIndicator";
 
 const UpdatePassword = () => {
@@ -59,11 +59,12 @@ const UpdatePassword = () => {
       return;
     }
 
+    // Validate password strength
     const validation = validatePassword(password);
     if (!validation.valid) {
       toast({
-        title: "خطأ",
-        description: "كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على أرقام ورموز خاصة",
+        title: "كلمة مرور ضعيفة",
+        description: "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، رقم واحد، ورمز خاص واحد",
         variant: "destructive",
       });
       return;
@@ -78,13 +79,31 @@ const UpdatePassword = () => {
 
       if (error) throw error;
 
+      // Log the password reset for security audit
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        try {
+          await supabase.from('user_activity').insert({
+            user_id: user.id,
+            activity_type: 'password_reset',
+            activity_description: 'تم إعادة تعيين كلمة المرور بنجاح',
+          });
+        } catch {
+          // Silent fail for logging
+        }
+      }
+
       toast({
-        title: "تم بنجاح",
-        description: "تم تحديث كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.",
+        title: "✅ تم تحديث كلمة المرور",
+        description: "تم تحديث كلمة المرور بنجاح. سيتم تسجيل خروجك من جميع الأجهزة.",
       });
 
-      // إعادة التوجيه إلى صفحة تسجيل الدخول بعد 2 ثانية
-      setTimeout(() => navigate("/auth"), 2000);
+      // Sign out from all sessions for security
+      await supabase.auth.signOut({ scope: 'global' });
+
+      setTimeout(() => {
+        navigate("/auth");
+      }, 2000);
     } catch (error: any) {
       console.error("Update password error:", error);
       toast({
@@ -182,9 +201,30 @@ const UpdatePassword = () => {
                   )}
                 </Button>
               </div>
-              {confirmPassword && password !== confirmPassword && (
-                <p className="text-sm text-destructive">كلمتا المرور غير متطابقتين</p>
+              {password && confirmPassword && (
+                <div className="flex items-center gap-2 text-sm mt-2">
+                  {password === confirmPassword ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-green-600">كلمات المرور متطابقة</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 text-destructive" />
+                      <span className="text-destructive">كلمات المرور غير متطابقة</span>
+                    </>
+                  )}
+                </div>
               )}
+            </div>
+
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
+              <p className="font-medium">⚠️ إجراءات أمنية:</p>
+              <ul className="space-y-1 text-muted-foreground mr-4">
+                <li>• سيتم تسجيل خروجك من جميع الأجهزة</li>
+                <li>• سيتم تسجيل هذه العملية في سجل الأمان</li>
+                <li>• الرابط صالح لاستخدام واحد فقط</li>
+              </ul>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading || password !== confirmPassword}>

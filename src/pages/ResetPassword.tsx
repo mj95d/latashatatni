@@ -27,28 +27,39 @@ const ResetPassword = () => {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء إدخال بريد إلكتروني صحيح",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const redirectUrl = `${window.location.origin}/update-password`;
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Always return success message for security (don't reveal if email exists)
+      await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
 
-      if (error) throw error;
-
+      // Show success regardless of whether email exists
       setEmailSent(true);
       toast({
-        title: "تم إرسال الرابط",
-        description: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. الرجاء التحقق من صندوق الوارد الخاص بك.",
+        title: "تم الإرسال",
+        description: "إذا كان هناك حساب مرتبط بهذا البريد، سيتم إرسال رابط إعادة التعيين خلال دقائق.",
       });
     } catch (error: any) {
-      console.error("Reset password error:", error);
+      // Generic error message for security
+      setEmailSent(true);
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إرسال رابط إعادة التعيين. الرجاء المحاولة مرة أخرى.",
-        variant: "destructive",
+        title: "تم الإرسال",
+        description: "إذا كان هناك حساب مرتبط بهذا البريد، سيتم إرسال رابط إعادة التعيين خلال دقائق.",
       });
     } finally {
       setLoading(false);
@@ -83,11 +94,17 @@ const ResetPassword = () => {
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  تم إرسال رابط إعادة تعيين كلمة المرور إلى:
+                  تم إرسال رابط إعادة تعيين كلمة المرور (إن وُجد حساب) إلى:
                 </p>
                 <p className="font-medium">{email}</p>
                 <p className="text-sm text-muted-foreground">
-                  الرجاء التحقق من صندوق الوارد الخاص بك. الرابط صالح لمدة 60 دقيقة.
+                  الرجاء التحقق من صندوق الوارد وصندوق الرسائل غير المرغوبة.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ⏱️ الرابط صالح لمدة 60 دقيقة فقط
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  🔒 لأسباب أمنية، لا نؤكد ما إذا كان البريد مسجلاً أم لا
                 </p>
               </div>
               <Button
