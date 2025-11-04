@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck, UserX, Clock, Phone, MapPin, Building } from "lucide-react";
+import { UserCheck, UserX, Clock, Phone, MapPin, Building, Loader2 } from "lucide-react";
 
 const MerchantRequests = () => {
   const [requests, setRequests] = useState<any[]>([]);
@@ -51,6 +51,7 @@ const MerchantRequests = () => {
       if (updateError) throw updateError;
 
       if (action === "approve") {
+        // Add merchant role
         const { error: roleError } = await supabase
           .from("user_roles")
           .insert({
@@ -58,12 +59,45 @@ const MerchantRequests = () => {
             role: "merchant"
           });
 
-        if (roleError) throw roleError;
+        if (roleError && roleError.code !== '23505') throw roleError; // Ignore duplicate
+
+        // Get the merchant request details to create the store
+        const { data: requestData } = await supabase
+          .from("merchant_requests")
+          .select("*")
+          .eq("id", requestId)
+          .single();
+
+        if (requestData) {
+          // Create store with approved status
+          const { error: storeError } = await supabase
+            .from("stores")
+            .insert({
+              owner_id: userId,
+              name: requestData.business_name,
+              description: requestData.business_description,
+              phone: requestData.phone,
+              whatsapp: requestData.whatsapp,
+              address: requestData.address,
+              city: requestData.city,
+              latitude: requestData.latitude,
+              longitude: requestData.longitude,
+              logo_url: requestData.logo_url,
+              commercial_document: requestData.commercial_document,
+              website: requestData.website,
+              approved: true,  // Store is pre-approved
+              is_active: true
+            });
+
+          if (storeError) throw storeError;
+        }
       }
 
       toast({
         title: action === "approve" ? "تمت الموافقة" : "تم الرفض",
-        description: action === "approve" ? "تمت الموافقة على الطلب بنجاح" : "تم رفض الطلب"
+        description: action === "approve" 
+          ? "تمت الموافقة على الطلب وإنشاء المتجر. يمكن للتاجر الآن إضافة المنتجات مباشرة." 
+          : "تم رفض الطلب"
       });
 
       fetchRequests();
@@ -103,73 +137,81 @@ const MerchantRequests = () => {
         <p className="text-muted-foreground mt-1">مراجعة والموافقة على طلبات التجار الجدد</p>
       </div>
 
-      <div className="grid gap-4">
-        {requests.map((request) => (
-          <Card key={request.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Building className="h-6 w-6 text-primary" />
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : requests.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Building className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">لا توجد طلبات</h3>
+          <p className="text-muted-foreground">
+            لا توجد طلبات تجار جديدة في الوقت الحالي
+          </p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {requests.map((request) => (
+            <Card key={request.id} className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Building className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{request.business_name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      بواسطة: {request.profiles?.full_name || "غير محدد"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{request.business_name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    بواسطة: {request.profiles?.full_name || "غير محدد"}
-                  </p>
-                </div>
+                {getStatusBadge(request.status)}
               </div>
-              {getStatusBadge(request.status)}
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{request.phone}</span>
-              </div>
-              {request.city && (
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{request.city}</span>
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{request.phone}</span>
+                </div>
+                {request.city && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{request.city}</span>
+                  </div>
+                )}
+              </div>
+
+              {request.business_description && (
+                <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm">{request.business_description}</p>
                 </div>
               )}
-            </div>
 
-            {request.business_description && (
-              <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm">{request.business_description}</p>
-              </div>
-            )}
-
-            {request.status === "pending" && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleRequest(request.id, request.user_id, "approve")}
-                  disabled={submitting}
-                  className="gap-2"
-                >
-                  <UserCheck className="h-4 w-4" />
-                  موافقة
-                </Button>
-                <Button
-                  onClick={() => handleRequest(request.id, request.user_id, "reject")}
-                  disabled={submitting}
-                  variant="destructive"
-                  className="gap-2"
-                >
-                  <UserX className="h-4 w-4" />
-                  رفض
-                </Button>
-              </div>
-            )}
-          </Card>
-        ))}
-
-        {requests.length === 0 && !loading && (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground">لا توجد طلبات حالياً</p>
-          </Card>
-        )}
-      </div>
+              {request.status === "pending" && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleRequest(request.id, request.user_id, "approve")}
+                    disabled={submitting}
+                    className="gap-2"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    موافقة
+                  </Button>
+                  <Button
+                    onClick={() => handleRequest(request.id, request.user_id, "reject")}
+                    disabled={submitting}
+                    variant="destructive"
+                    className="gap-2"
+                  >
+                    <UserX className="h-4 w-4" />
+                    رفض
+                  </Button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

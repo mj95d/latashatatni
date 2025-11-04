@@ -21,6 +21,8 @@ import {
   Check,
   Sparkles,
   Camera,
+  Shield,
+  Clock,
 } from "lucide-react";
 import {
   Dialog,
@@ -57,6 +59,7 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [storeName, setStoreName] = useState("");
+  const [storeApproved, setStoreApproved] = useState(true);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
   const [imageOptions, setImageOptions] = useState({
     enableCompression: true,
@@ -82,15 +85,17 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
     try {
       const { data, error } = await supabase
         .from("stores")
-        .select("name")
+        .select("name, approved")
         .eq("id", storeId)
         .single();
 
       if (error) throw error;
       setStoreName(data?.name || "متجرك");
+      setStoreApproved(data?.approved || false);
     } catch (error) {
       console.error("Error fetching store name:", error);
       setStoreName("متجرك");
+      setStoreApproved(false);
     }
   };
 
@@ -340,6 +345,29 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Store Not Approved Warning */}
+      {!storeApproved && (
+        <Card className="p-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+          <div className="flex items-start gap-4">
+            <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
+              <Shield className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-amber-900 dark:text-amber-100 mb-2">
+                متجرك قيد المراجعة
+              </h3>
+              <p className="text-amber-800 dark:text-amber-200 text-sm mb-4">
+                متجرك حالياً قيد المراجعة من قبل فريقنا. بعد الموافقة، يمكنك إضافة المنتجات مباشرة وستظهر للعملاء فوراً بدون الحاجة لمراجعة إضافية.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                <Clock className="h-4 w-4" />
+                <span>عادة ما تستغرق المراجعة من 24-48 ساعة</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -348,13 +376,17 @@ export const ProductsManager = ({ storeId }: ProductsManagerProps) => {
             منتجاتي
           </h2>
           <p className="text-muted-foreground mt-1">
-            أضف منتجاتك وستظهر مباشرة للعملاء بدون مراجعة
+            {storeApproved 
+              ? "أضف منتجاتك وستظهر مباشرة للعملاء بدون مراجعة"
+              : "سيتم تفعيل إضافة المنتجات بعد اعتماد متجرك"
+            }
           </p>
         </div>
         <Button
           onClick={() => setIsDialogOpen(true)}
           size="lg"
           className="gap-2"
+          disabled={!storeApproved}
         >
           <Plus className="h-5 w-5" />
           إضافة منتج جديد
