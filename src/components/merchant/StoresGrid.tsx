@@ -16,6 +16,7 @@ import {
   Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoreGridProps {
   stores: any[];
@@ -24,6 +25,13 @@ interface StoreGridProps {
 
 export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
   const navigate = useNavigate();
+
+  // Get image URL from Supabase Storage
+  const getImageUrl = (path: string | null) => {
+    if (!path) return null;
+    const { data } = supabase.storage.from('store-documents').getPublicUrl(path);
+    return data.publicUrl;
+  };
 
   if (stores.length === 0) {
     return (
@@ -48,17 +56,20 @@ export const StoresGrid = ({ stores, onStoreSelect }: StoreGridProps) => {
         >
           {/* Store Cover/Logo */}
           <div className="relative h-48 bg-gradient-to-br from-primary/10 via-primary/5 to-background overflow-hidden">
-            {store.cover_url || store.logo_url ? (
+            {(store.cover_url || store.logo_url) ? (
               <img
-                src={store.cover_url || store.logo_url}
+                src={getImageUrl(store.cover_url || store.logo_url) || ''}
                 alt={store.name}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Store className="w-20 h-20 text-primary/30" />
-              </div>
-            )}
+            ) : null}
+            <div className={`w-full h-full flex items-center justify-center ${(store.cover_url || store.logo_url) ? 'hidden' : ''}`}>
+              <Store className="w-20 h-20 text-primary/30" />
+            </div>
             
             {/* Status Badge */}
             <div className="absolute top-3 right-3">
