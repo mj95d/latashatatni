@@ -112,29 +112,71 @@ const Product = () => {
         return;
       }
 
-      // Ensure images are always an array of valid URLs
+      // Process and sign product images
       if (data.images) {
         if (Array.isArray(data.images)) {
           // Filter and clean array of URLs
-          data.images = data.images
+          const imageUrls = data.images
             .map((img: any) => {
               if (typeof img === 'string') return img;
               if (typeof img === 'object' && img?.url) return img.url;
               return null;
             })
             .filter((url): url is string => url !== null && url.trim() !== '');
+          
+          // Sign each image URL that needs signing
+          const signedUrls = await Promise.all(
+            imageUrls.map(async (url: string) => {
+              // If it's already a full URL, use it as is
+              if (url.startsWith('http')) return url;
+              
+              // If it's a storage path, sign it
+              try {
+                const { data: signedData, error: signError } = await supabase
+                  .storage
+                  .from('product-images')
+                  .createSignedUrl(url, 3600); // 1 hour expiry
+                
+                if (signError || !signedData?.signedUrl) {
+                  console.error('Error signing image:', signError);
+                  return null;
+                }
+                
+                return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${signedData.signedUrl}`;
+              } catch (err) {
+                console.error('Error processing image:', err);
+                return null;
+              }
+            })
+          );
+          
+          data.images = signedUrls.filter((url): url is string => url !== null);
         } else if (typeof data.images === 'string' && data.images.trim() !== '') {
-          // Single URL string, convert to array
-          data.images = [data.images];
+          // Single URL string
+          let imageUrl = data.images;
+          if (!imageUrl.startsWith('http')) {
+            try {
+              const { data: signedData, error: signError } = await supabase
+                .storage
+                .from('product-images')
+                .createSignedUrl(imageUrl, 3600);
+              
+              if (!signError && signedData?.signedUrl) {
+                imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${signedData.signedUrl}`;
+              }
+            } catch (err) {
+              console.error('Error processing single image:', err);
+            }
+          }
+          data.images = [imageUrl];
         } else {
-          // Invalid format, use empty array
           data.images = [];
         }
       } else {
         data.images = [];
       }
 
-      console.log('Product images:', data.images); // Debug log
+      console.log('Product images after processing:', data.images);
       setProduct(data);
     } catch (error) {
       console.error("Error fetching product:", error);
