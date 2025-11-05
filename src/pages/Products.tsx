@@ -9,6 +9,7 @@ import { MapPin, Star, Tag, Package, Eye, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Product {
   id: string;
@@ -150,8 +151,8 @@ const Products = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 pb-20">
-          <div className="container mx-auto px-4 lg:px-6 text-center">
-            <div className="animate-pulse">جاري التحميل...</div>
+          <div className="container mx-auto px-4 lg:px-6">
+            <LoadingSpinner size="lg" fullScreen message="جاري تحميل المنتجات..." />
           </div>
         </main>
         <Footer />

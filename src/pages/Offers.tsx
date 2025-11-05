@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { OfferDetailsDialog } from "@/components/OfferDetailsDialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Offer {
   id: string;
@@ -139,8 +140,8 @@ const Offers = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 pb-20">
-          <div className="container mx-auto px-4 lg:px-6 text-center">
-            <div className="animate-pulse">جاري التحميل...</div>
+          <div className="container mx-auto px-4 lg:px-6">
+            <LoadingSpinner size="lg" fullScreen message="جاري تحميل العروض..." />
           </div>
         </main>
         <Footer />

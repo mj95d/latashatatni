@@ -13,6 +13,7 @@ import {
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselApi } from "@/components/ui/carousel";
 import { toast } from "sonner";
 import { buildWhatsAppMessage, buildWhatsAppLink, PLATFORM_WHATSAPP, generateOrderId } from "@/lib/whatsapp";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -265,10 +266,7 @@ const Product = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
+        <LoadingSpinner size="xl" message="جاري تحميل المنتج..." />
       </div>
     );
   }

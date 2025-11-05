@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StoresMap from "@/components/StoresMap";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Store {
   id: string;
@@ -416,9 +417,8 @@ const Stores = () => {
           {viewMode === "grid" && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {loading ? (
-                <div className="col-span-full text-center py-20">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                  <p className="mt-4 text-muted-foreground">جاري تحميل المتاجر...</p>
+                <div className="col-span-full py-20">
+                  <LoadingSpinner size="lg" message="جاري تحميل المتاجر..." />
                 </div>
               ) : (
                 filteredStores.map((store, index) => (

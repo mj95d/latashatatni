@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 // City images mapping
 const cityImages: Record<string, string> = {
@@ -147,20 +148,8 @@ const Cities = () => {
 
           {/* Loading State */}
           {loading && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-64 w-full" />
-                  <div className="p-6">
-                    <Skeleton className="h-8 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-full mb-4" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Skeleton className="h-16" />
-                      <Skeleton className="h-16" />
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            <div className="py-20">
+              <LoadingSpinner size="lg" message="جاري تحميل المدن..." />
             </div>
           )}
 
