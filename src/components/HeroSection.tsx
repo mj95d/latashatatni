@@ -83,14 +83,14 @@ const HeroSection = () => {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img src={heroBg} alt="أسواق محلية في السعودية" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/98 via-background/85 to-background/98" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/98 via-background/90 to-background/98" />
       </div>
 
       {/* Content */}
       <div className="container mx-auto px-4 lg:px-6 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-10">
+        <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer hover:scale-105">
             <Store className="w-4 h-4" />
             <span className="font-semibold">منصة محلية 100% سعودية</span>
           </div>
@@ -154,24 +154,24 @@ const HeroSection = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
-            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-lg">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-2">
+          <div className="grid grid-cols-3 gap-4 md:gap-6 max-w-2xl mx-auto pt-8">
+            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
                 {stats.stores > 0 ? `+${stats.stores}` : "0"}
               </div>
-              <div className="text-base md:text-lg font-semibold text-foreground">متجر محلي</div>
+              <div className="text-sm md:text-lg font-semibold text-foreground">متجر محلي</div>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-lg">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-2">
+            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
                 {stats.offers > 0 ? `+${stats.offers}` : "0"}
               </div>
-              <div className="text-base md:text-lg font-semibold text-foreground">منتج وعرض</div>
+              <div className="text-sm md:text-lg font-semibold text-foreground">منتج وعرض</div>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-blue-500/50 transition-smooth shadow-lg">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-blue-400 to-blue-600 bg-clip-text text-transparent mb-2">
-                +20
+            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
+                {stats.cities > 0 ? `+${stats.cities}` : "0"}
               </div>
-              <div className="text-base md:text-lg font-semibold text-foreground">مدينة</div>
+              <div className="text-sm md:text-lg font-semibold text-foreground">مدينة</div>
             </div>
           </div>
         </div>

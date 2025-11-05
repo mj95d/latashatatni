@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Star, Clock, Map as MapIcon } from "lucide-react";
+import { MapPin, Star, Store as StoreIcon, Map as MapIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import StoresMap from "./StoresMap";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface Store {
   id: string;
@@ -18,6 +19,8 @@ interface Store {
   longitude: number | null;
   rating: number | null;
   is_active: boolean | null;
+  logo_url: string | null;
+  cover_url: string | null;
   categories: { name: string } | null;
 }
 
@@ -88,6 +91,19 @@ const StoresSection = () => {
     return R * c;
   };
 
+  const getStoreImageUrl = async (path: string | null) => {
+    if (!path) return null;
+    try {
+      const { data } = await supabase.storage
+        .from('product-images')
+        .createSignedUrl(path, 3600);
+      return data?.signedUrl || null;
+    } catch (error) {
+      console.error('Error getting image URL:', error);
+      return null;
+    }
+  };
+
   const fetchStores = async () => {
     try {
       const { data, error } = await supabase
@@ -104,9 +120,18 @@ const StoresSection = () => {
       
       let processedStores = data || [];
       
+      // Get signed URLs for images
+      const storesWithImages = await Promise.all(
+        processedStores.map(async (store) => {
+          const logoUrl = await getStoreImageUrl(store.logo_url);
+          const coverUrl = await getStoreImageUrl(store.cover_url);
+          return { ...store, logoUrl, coverUrl };
+        })
+      );
+      
       // Sort by distance if user location is available
       if (userLocation && sortByDistance) {
-        processedStores = processedStores
+        processedStores = storesWithImages
           .map(store => ({
             ...store,
             distance: calculateDistance(
@@ -119,7 +144,7 @@ const StoresSection = () => {
           .sort((a: any, b: any) => a.distance - b.distance)
           .slice(0, 4);
       } else {
-        processedStores = processedStores.slice(0, 4);
+        processedStores = storesWithImages.slice(0, 4);
       }
       
       setStores(processedStores);
@@ -190,62 +215,98 @@ const StoresSection = () => {
 
         {/* Stores Grid */}
         {viewMode === "grid" && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {loading ? (
-              <div className="col-span-full text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              <div className="col-span-full">
+                <LoadingSpinner message="جاري تحميل المتاجر..." />
+              </div>
+            ) : stores.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <StoreIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-muted-foreground text-lg">لا توجد متاجر متاحة حالياً</p>
               </div>
             ) : (
-              stores.map((store) => (
-                <Card
-                  key={store.id}
-                  className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/40"
-                >
-                  {/* Store Image */}
-                  <div className="relative h-52 overflow-hidden bg-muted">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center">
-                      <MapPin className="w-12 h-12 text-white/30" />
-                    </div>
-                  </div>
-
-                  {/* Store Info */}
-                  <div className="p-5 space-y-4">
-                    <div>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-bold text-xl group-hover:text-primary transition-smooth">
-                          {store.name}
-                        </h3>
-                        {sortByDistance && (store as any).distance !== undefined && (
-                          <Badge className="bg-primary/10 text-primary text-xs flex-shrink-0">
-                            <MapPin className="w-3 h-3 ml-1" />
-                            {(store as any).distance.toFixed(1)} كم
-                          </Badge>
-                        )}
+              stores.map((store, index) => (
+                <Link to={`/store/${store.id}`} key={store.id}>
+                  <Card
+                    className="overflow-hidden group hover:shadow-glow transition-smooth cursor-pointer border-2 hover:border-primary/50"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {/* Store Image */}
+                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-muted via-muted/80 to-background">
+                      {(store as any).coverUrl || (store as any).logoUrl ? (
+                        <img
+                          src={(store as any).coverUrl || (store as any).logoUrl}
+                          alt={store.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.querySelector('.fallback-icon')?.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div className={`fallback-icon absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/20 ${(store as any).coverUrl || (store as any).logoUrl ? 'hidden' : ''}`}>
+                        <StoreIcon className="w-16 h-16 text-primary/30" />
                       </div>
-                      {store.categories?.name && (
-                        <p className="text-sm text-muted-foreground">
-                          {store.categories.name}
-                        </p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      
+                      {/* Logo Overlay */}
+                      {(store as any).logoUrl && (
+                        <div className="absolute bottom-3 right-3">
+                          <div className="w-14 h-14 rounded-xl bg-card border-2 border-white/20 shadow-lg overflow-hidden backdrop-blur-sm">
+                            <img
+                              src={(store as any).logoUrl}
+                              alt={`${store.name} logo`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    {/* Rating */}
-                    {store.rating && (
-                      <div className="flex items-center gap-1.5 bg-secondary/10 px-3 py-1.5 rounded-lg w-fit">
-                        <Star className="w-4 h-4 fill-secondary text-secondary" />
-                        <span className="font-semibold text-foreground">{store.rating.toFixed(1)}</span>
+                    {/* Store Info */}
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-lg group-hover:text-primary transition-smooth line-clamp-1">
+                            {store.name}
+                          </h3>
+                          {sortByDistance && (store as any).distance !== undefined && (
+                            <Badge variant="secondary" className="text-xs flex-shrink-0 bg-primary/10 text-primary border-primary/20">
+                              {(store as any).distance.toFixed(1)} كم
+                            </Badge>
+                          )}
+                        </div>
+                        {store.categories?.name && (
+                          <p className="text-xs text-muted-foreground">
+                            {store.categories.name}
+                          </p>
+                        )}
                       </div>
-                    )}
 
-                    {/* Address */}
-                    {store.address && (
-                      <div className="flex items-start gap-2 text-sm pt-2 border-t border-border/50">
-                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground text-xs line-clamp-2">{store.address}</span>
+                      {/* Rating */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 bg-secondary/10 px-2.5 py-1 rounded-lg">
+                          <Star className="w-3.5 h-3.5 fill-secondary text-secondary" />
+                          <span className="text-sm font-semibold text-foreground">
+                            {store.rating ? store.rating.toFixed(1) : '0.0'}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </Card>
+
+                      {/* Address */}
+                      {store.address && (
+                        <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+                          <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground text-xs line-clamp-1">{store.address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </Link>
               ))
             )}
           </div>
