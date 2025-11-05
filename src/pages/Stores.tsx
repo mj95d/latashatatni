@@ -429,13 +429,13 @@ const Stores = () => {
                     onClick={() => navigate(`/store/${store.id}`)}
                   >
                      {/* Store Image/Logo */}
-                     <div className="relative h-52 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+                     <div className="relative h-52 overflow-hidden bg-gradient-to-br from-primary/10 via-primary-glow/10 to-background">
                         {(store.cover_url || store.logo_url) ? (
                           <img
                             src={store.cover_url || store.logo_url || ''}
                             alt={store.name}
                             loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-700"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -445,6 +445,7 @@ const Stores = () => {
                        <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center ${(store.cover_url || store.logo_url) ? 'hidden' : ''}`}>
                          <Store className="w-16 h-16 text-white/30" />
                        </div>
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
                       
                       {/* Distance Badge */}
                       {(store as any).distance !== undefined && (

@@ -289,18 +289,18 @@ const Product = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-32 pb-20 animate-fade-in">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <button onClick={() => navigate("/")} className="hover:text-primary">
+        <div className="flex items-center gap-2 text-sm mb-8 bg-card px-4 py-3 rounded-xl border-2 border-border/50 w-fit">
+          <button onClick={() => navigate("/")} className="hover:text-primary transition-smooth font-semibold">
             الرئيسية
           </button>
-          <ArrowRight className="w-4 h-4 rotate-180" />
-          <button onClick={() => navigate("/stores")} className="hover:text-primary">
-            المتاجر
+          <ArrowRight className="w-4 h-4 rotate-180 text-muted-foreground" />
+          <button onClick={() => navigate("/products")} className="hover:text-primary transition-smooth font-semibold">
+            المنتجات
           </button>
-          <ArrowRight className="w-4 h-4 rotate-180" />
-          <span className="text-foreground">{product.name}</span>
+          <ArrowRight className="w-4 h-4 rotate-180 text-muted-foreground" />
+          <span className="text-primary font-bold">{product.name}</span>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
@@ -312,12 +312,12 @@ const Product = () => {
                   <CarouselContent>
                     {productImages.map((imgUrl, index) => (
                       <CarouselItem key={index}>
-                        <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-muted/50 to-muted shadow-lg">
+                        <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/5 via-primary-glow/5 to-background shadow-soft border-2 border-border/50">
                           <img
                             src={typeof imgUrl === 'string' ? imgUrl : String(imgUrl)}
                             alt={`${product.name} - صورة ${index + 1}`}
                             loading={index === 0 ? "eager" : "lazy"}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover hover:scale-105 transition-smooth duration-700"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
@@ -360,12 +360,12 @@ const Product = () => {
                 </div>
               </>
             ) : (
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-muted/50 to-muted shadow-lg">
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/5 via-primary-glow/5 to-background shadow-soft border-2 border-border/50">
                 <img
                   src={typeof productImages[0] === 'string' ? productImages[0] : String(productImages[0])}
                   alt={product.name}
                   loading="eager"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-105 transition-smooth duration-700"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=600&fit=crop';
@@ -414,10 +414,10 @@ const Product = () => {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent">{product.name}</h1>
               
               {/* Store Info */}
-              <div className="flex items-center gap-3 mb-6 p-4 bg-card/50 rounded-xl border">
+              <div className="flex items-center gap-3 mb-6 p-4 bg-card rounded-xl border-2 border-border/50 shadow-soft hover:border-primary/40 transition-smooth cursor-pointer" onClick={() => navigate(`/store/${product.store_id}`)}>
                 <Store className="w-5 h-5 text-primary" />
                 <div className="flex-1">
                   <p className="font-semibold">{product.stores?.name}</p>
@@ -445,10 +445,10 @@ const Product = () => {
 
               {/* Product SKU */}
               {product.sku && (
-                <div className="flex items-center gap-2 text-sm bg-muted/50 px-4 py-2 rounded-lg w-fit">
-                  <Package className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">رقم المنتج:</span>
-                  <code className="font-mono font-semibold bg-background px-2 py-1 rounded">
+                <div className="flex items-center gap-2 text-sm bg-primary/10 px-4 py-2 rounded-lg w-fit border-2 border-primary/20">
+                  <Package className="w-4 h-4 text-primary" />
+                  <span className="text-foreground font-semibold">رقم المنتج:</span>
+                  <code className="font-mono font-bold bg-background px-3 py-1 rounded border border-primary/30 text-primary">
                     {product.sku}
                   </code>
                 </div>
