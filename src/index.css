@@ -21,6 +21,7 @@ All colors MUST be HSL.
     --primary-foreground: 0 0% 100%;
     
     --primary-glow: 202 100% 70%;
+    --primary-light: 205 82% 55%;
 
     --secondary: 14 100% 62%;
     --secondary-foreground: 0 0% 100%;
@@ -43,11 +44,14 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(205 82% 45%), hsl(202 100% 70%));
     --gradient-secondary: linear-gradient(135deg, hsl(14 100% 62%), hsl(14 90% 55%));
     --gradient-hero: linear-gradient(180deg, hsl(216 33% 97%), hsl(202 50% 95%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(213 14% 98%));
     
     --shadow-soft: 0 4px 20px -4px hsl(205 82% 45% / 0.15);
     --shadow-glow: 0 0 30px hsl(202 100% 70% / 0.3);
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.08);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .dark {
@@ -64,6 +68,7 @@ All colors MUST be HSL.
     --primary-foreground: 207 83% 23%;
     
     --primary-glow: 202 90% 80%;
+    --primary-light: 202 100% 75%;
 
     --secondary: 14 100% 62%;
     --secondary-foreground: 0 0% 100%;
@@ -84,9 +89,11 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(202 100% 70%), hsl(202 90% 80%));
     --gradient-secondary: linear-gradient(135deg, hsl(14 100% 62%), hsl(14 90% 55%));
     --gradient-hero: linear-gradient(180deg, hsl(207 83% 23%), hsl(207 70% 18%));
+    --gradient-card: linear-gradient(145deg, hsl(207 70% 18%), hsl(207 60% 20%));
     
     --shadow-soft: 0 4px 20px -4px hsl(202 100% 70% / 0.2);
     --shadow-glow: 0 0 30px hsl(202 90% 80% / 0.4);
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
   }
 }
 
@@ -103,6 +110,18 @@ All colors MUST be HSL.
   
   html {
     direction: rtl;
+    scroll-behavior: smooth;
+  }
+
+  /* تحسين العناوين */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+    line-height: 1.2;
+  }
+
+  /* تحسين الروابط */
+  a {
+    @apply transition-smooth;
   }
 }
 
@@ -118,6 +137,10 @@ All colors MUST be HSL.
   .gradient-hero {
     background: var(--gradient-hero);
   }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
   
   .shadow-soft {
     box-shadow: var(--shadow-soft);
@@ -126,8 +149,62 @@ All colors MUST be HSL.
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
   
   .transition-smooth {
     transition: var(--transition-smooth);
+  }
+
+  .transition-spring {
+    transition: var(--transition-spring);
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
