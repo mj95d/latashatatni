@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import AdminNotifications from "./AdminNotifications";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
@@ -121,6 +122,7 @@ const Navbar = () => {
                 <AdminNotifications />
               </>
             )}
+            {user && <NotificationBell />}
             {user ? (
               <Link to="/profile">
                 <Button variant="hero" size="sm" className="mr-2">

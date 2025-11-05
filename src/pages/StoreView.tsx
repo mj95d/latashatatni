@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import FollowStoreButton from "@/components/FollowStoreButton";
 
 interface Product {
   id: string;
@@ -358,15 +359,19 @@ const StoreView = () => {
                 </div>
               )}
 
-              {/* Contact Button */}
-              <Button
-                onClick={handleWhatsAppContact}
-                className="w-full md:w-auto shadow-glow hover:shadow-soft transition-smooth"
-                size="lg"
-              >
-                <MessageSquare className="w-5 h-5 ml-2" />
-                تواصل عبر واتساب
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <FollowStoreButton storeId={store.id} storeName={store.name} />
+                <Button
+                  onClick={handleWhatsAppContact}
+                  className="shadow-glow hover:shadow-soft transition-smooth"
+                  size="lg"
+                  variant="secondary"
+                >
+                  <MessageSquare className="w-5 h-5 ml-2" />
+                  تواصل عبر واتساب
+                </Button>
+              </div>
             </div>
           </div>
         </Card>
