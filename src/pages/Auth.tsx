@@ -489,13 +489,13 @@ const Auth = () => {
 
         <p className="text-center text-sm text-muted-foreground mt-4">
           بإنشاء حساب، أنت توافق على{" "}
-          <a href="/terms" className="text-primary hover:underline">
+          <Link to="/terms" className="text-primary hover:underline">
             شروط الاستخدام
-          </a>{" "}
+          </Link>{" "}
           و
-          <a href="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className="text-primary hover:underline">
             سياسة الخصوصية
-          </a>
+          </Link>
         </p>
       </div>
     </div>

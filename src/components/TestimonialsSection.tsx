@@ -1,5 +1,7 @@
-import { Card } from "@/components/ui/card";
-import { Star, Quote } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Quote, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const testimonials = [
@@ -98,11 +100,11 @@ const TestimonialsSection = () => {
           <p className="text-muted-foreground mb-4">
             هل تريد أن تكون من التجار الناجحين على منصتنا؟
           </p>
-          <a href="/merchant">
-            <button className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:shadow-glow transition-smooth">
+          <Link to="/merchant">
+            <Button size="lg" className="shadow-glow">
               سجّل متجرك مجاناً
-            </button>
-          </a>
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

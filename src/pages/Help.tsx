@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Help = () => {
   const faqs = [
@@ -91,12 +92,12 @@ const Help = () => {
           <p className="text-lg text-muted-foreground">
             لم تجد إجابة لسؤالك؟
           </p>
-          <a 
-            href="/contact"
+          <Link 
+            to="/contact"
             className="inline-block text-primary font-semibold text-lg hover:underline transition-smooth"
           >
             تواصل معنا مباشرة ←
-          </a>
+          </Link>
         </div>
       </main>
 

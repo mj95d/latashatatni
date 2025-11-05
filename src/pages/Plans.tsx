@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown, Sparkles, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const plans = [
   {
@@ -136,9 +137,9 @@ const Plans = () => {
                       className="w-full border-2"
                       asChild
                     >
-                      <a href={plan.price === "مجاني" ? "/merchant" : `/merchant/subscribe?plan=${plan.name.toLowerCase()}`}>
+                      <Link to={plan.price === "مجاني" ? "/merchant" : `/merchant/subscribe?plan=${plan.name.toLowerCase()}`}>
                         {plan.price === "مجاني" ? "البدء مجاناً" : "اشترك الآن"}
-                      </a>
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
