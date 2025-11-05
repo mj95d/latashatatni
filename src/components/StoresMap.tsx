@@ -57,11 +57,14 @@ export default function StoresMap({ stores }: StoresMapProps) {
       const map = L.map(containerRef.current, {
         center,
         zoom: validStores.length > 0 ? 12 : 6,
-        scrollWheelZoom: true
+        scrollWheelZoom: true,
+        zoomControl: true
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+        minZoom: 5
       }).addTo(map);
 
       // Add markers
@@ -70,33 +73,35 @@ export default function StoresMap({ stores }: StoresMapProps) {
         
         // Create popup content
         const popupContent = `
-          <div style="min-width: 200px; padding: 8px;">
-            <h3 style="font-weight: bold; font-size: 1.125rem; margin-bottom: 12px;">${store.name}</h3>
+          <div style="min-width: 220px; padding: 12px; font-family: 'Cairo', sans-serif; direction: rtl;">
+            <h3 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 12px; color: #1e293b;">${store.name}</h3>
             ${store.address ? `
-              <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 8px; font-size: 0.875rem;">
-                <span>📍</span>
-                <span style="color: #64748b;">${store.address}</span>
+              <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 10px; font-size: 0.875rem;">
+                <span style="flex-shrink: 0;">📍</span>
+                <span style="color: #64748b; line-height: 1.5;">${store.address}</span>
               </div>
             ` : ''}
             ${store.phone ? `
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.875rem;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 0.875rem;">
                 <span>📞</span>
-                <a href="tel:+966532402020" style="color: #3b82f6; text-decoration: none;">+966532402020</a>
+                <a href="tel:${store.phone}" style="color: #3b82f6; text-decoration: none; font-weight: 500;">${store.phone}</a>
               </div>
             ` : ''}
-            ${store.rating ? `
+            ${store.rating && store.rating > 0 ? `
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.875rem;">
                 <span>⭐</span>
-                <span style="font-weight: 500;">${store.rating.toFixed(1)}</span>
+                <span style="font-weight: 600; color: #f59e0b;">${store.rating.toFixed(1)}</span>
               </div>
             ` : ''}
             <a 
               href="https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}"
               target="_blank"
               rel="noopener noreferrer"
-              style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; background: #3b82f6; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: 500; width: 100%; justify-content: center;"
+              style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.875rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; width: 100%; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);"
+              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)';"
+              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.3)';"
             >
-              📍 عرض المسار على Google Maps
+              🗺️ عرض المسار
             </a>
           </div>
         `;
