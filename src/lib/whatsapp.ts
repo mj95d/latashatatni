@@ -97,8 +97,13 @@ export function generateOrderId(): string {
  * إنشاء رابط واتساب
  */
 export function buildWhatsAppLink(phone: string, message: string): string {
-  // تنظيف رقم الهاتف من المسافات والرموز
-  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  // تنظيف رقم الهاتف من المسافات والرموز وعلامة +
+  let cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+  
+  // إضافة علامة + إذا لم تكن موجودة
+  if (!cleanPhone.startsWith('+')) {
+    cleanPhone = '+' + cleanPhone;
+  }
   
   // ترميز الرسالة للURL
   const encodedMessage = encodeURIComponent(message);
@@ -109,4 +114,4 @@ export function buildWhatsAppLink(phone: string, message: string): string {
 /**
  * رقم واتساب المنصة الرئيسي
  */
-export const PLATFORM_WHATSAPP = "966532402020";
+export const PLATFORM_WHATSAPP = "+966532402020";
