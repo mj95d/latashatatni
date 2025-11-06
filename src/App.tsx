@@ -74,6 +74,7 @@ const App = () => (
             <Route path="subscriptions" element={<AdminPages.Subscriptions />} />
             <Route path="cities" element={<AdminPages.Cities />} />
             <Route path="media" element={<AdminPages.Media />} />
+            <Route path="tourism" element={<AdminPages.TourismPlaces />} />
             <Route path="payments" element={<AdminPages.Payments />} />
             <Route path="reports" element={<AdminPages.Reports />} />
             <Route path="logs" element={<AdminPages.Logs />} />

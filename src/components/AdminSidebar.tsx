@@ -17,7 +17,8 @@ import {
   ShoppingCart,
   UserPlus,
   MessageCircle,
-  Image
+  Image,
+  Landmark
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const adminMenuItems = [
   { title: "إدارة العروض", url: "/admin/offers", icon: Tag },
   { title: "طلبات الاشتراكات", url: "/admin/subscriptions", icon: CreditCard },
   { title: "المدن والمواقع", url: "/admin/cities", icon: MapPin },
+  { title: "الأماكن السياحية", url: "/admin/tourism", icon: Landmark },
   { title: "مكتبة الصور", url: "/admin/media", icon: Image },
   { title: "التقارير", url: "/admin/reports", icon: FileText },
   { title: "السجلات", url: "/admin/logs", icon: ScrollText },
