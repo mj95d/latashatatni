@@ -130,7 +130,7 @@ const TourismPlaces = () => {
       const { data, error } = await supabase
         .from("media_library")
         .select("id, file_url, file_name, category")
-        .eq("category", "tourism")
+        .or("category.eq.tourism,category.eq.صور الأماكن السياحية,category.is.null")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -475,46 +475,80 @@ const TourismPlaces = () => {
           </DialogHeader>
 
           {mediaLibrary.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>لا توجد صور في فئة السياحة</p>
-              <p className="text-sm mt-2">
-                قم برفع صور جديدة من صفحة مكتبة الصور وحدد الفئة "صور الأماكن السياحية"
-              </p>
+            <div className="text-center py-12 space-y-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+                <ImageIcon className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">لا توجد صور متاحة</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  قم برفع صور من صفحة مكتبة الصور أولاً
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMediaDialogOpen(false);
+                    window.location.href = "/admin/media";
+                  }}
+                >
+                  <ImageIcon className="w-4 h-4 ml-2" />
+                  فتح مكتبة الصور
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
-              {mediaLibrary.map((media) => (
-                <div
-                  key={media.id}
-                  className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                    selectedImages.includes(media.file_url)
-                      ? "border-primary ring-2 ring-primary"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  onClick={() => toggleImageSelection(media.file_url)}
-                >
-                  <img
-                    src={media.file_url}
-                    alt={media.file_name}
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedImages.includes(media.file_url) && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
-                        ✓
+            <>
+              <div className="mb-4 p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>تم العثور على {mediaLibrary.length} صورة</strong> - انقر على الصور لتحديدها ({selectedImages.length} محددة)
+                </p>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {mediaLibrary.map((media) => (
+                  <div
+                    key={media.id}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all hover:scale-105 ${
+                      selectedImages.includes(media.file_url)
+                        ? "border-primary ring-4 ring-primary/30 shadow-lg"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => toggleImageSelection(media.file_url)}
+                  >
+                    <img
+                      src={media.file_url}
+                      alt={media.file_name}
+                      className="w-full h-full object-cover"
+                    />
+                    {selectedImages.includes(media.file_url) && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
                       </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                      <p className="text-xs text-white truncate">{media.file_name}</p>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setMediaDialogOpen(false)}>
-              إغلاق
-            </Button>
+          <div className="flex justify-between items-center gap-2 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              {selectedImages.length > 0 && `${selectedImages.length} صورة محددة`}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setMediaDialogOpen(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={() => setMediaDialogOpen(false)}>
+                تم ({selectedImages.length})
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
