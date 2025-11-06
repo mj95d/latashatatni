@@ -2,7 +2,7 @@ import { MediaManager } from "@/components/admin/MediaManager";
 
 const Media = () => {
   return (
-    <div className="p-6">
+    <div className="container mx-auto">
       <MediaManager />
     </div>
   );
