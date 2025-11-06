@@ -79,7 +79,7 @@ const HeroSection = () => {
     }
   };
   return (
-    <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img src={heroBg} alt="أسواق محلية في السعودية" className="w-full h-full object-cover" />
@@ -87,49 +87,50 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 lg:px-6 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-8 animate-fade-in py-6 md:py-0">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-5 py-2.5 text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer hover:scale-105">
-            <Store className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 bg-primary/10 border-2 border-primary/30 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm text-primary backdrop-blur-sm hover:bg-primary/15 transition-smooth cursor-pointer hover:scale-105">
+            <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="font-semibold">منصة محلية 100% سعودية</span>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight px-2">
             <span className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent drop-shadow-lg">
               لا تشتتني
             </span>
             <br />
-            <span className="text-gray-400 text-4xl md:text-6xl">كل ما تحتاجه قريب منك</span>
+            <span className="text-gray-400 text-2xl sm:text-3xl md:text-4xl lg:text-6xl">كل ما تحتاجه قريب منك</span>
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed px-2">
             سجّل مجانًا، وخلّ عروضك توصل للعملاء القريبين منك.
-            <br />
-            عمولتنا فقط <span className="text-blue-500 font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو
-            اشتراك شهري.
+            <br className="hidden sm:block" />
+            <span className="block sm:inline mt-1 sm:mt-0">
+              عمولتنا فقط <span className="text-blue-500 font-bold">1%</span> على الطلبات المكتملة — بدون التزامات أو اشتراك شهري.
+            </span>
           </p>
 
           {/* Search Box */}
-          <div className="bg-card rounded-3xl shadow-glow p-4 max-w-3xl mx-auto border-2 border-border/50 hover:border-primary/30 transition-smooth">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+          <div className="bg-card rounded-2xl sm:rounded-3xl shadow-glow p-3 sm:p-4 max-w-3xl mx-auto border-2 border-border/50 hover:border-primary/30 transition-smooth">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
+              <div className="relative">
+                <Search className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10" />
                 <Input
                   type="text"
                   placeholder="ابحث عن متجر أو منتج..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl"
+                  className="pr-10 sm:pr-14 h-12 sm:h-14 text-sm sm:text-base bg-background border-border/50 focus:border-primary/50 rounded-xl sm:rounded-2xl"
                 />
               </div>
-              <div className="flex-1 relative">
-                <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10 pointer-events-none" />
+              <div className="relative">
+                <MapPin className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground z-10 pointer-events-none" />
                 <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger className="pr-14 h-14 text-base bg-background border-border/50 focus:border-primary/50 rounded-2xl">
+                  <SelectTrigger className="pr-10 sm:pr-14 h-12 sm:h-14 text-sm sm:text-base bg-background border-border/50 focus:border-primary/50 rounded-xl sm:rounded-2xl">
                     <SelectValue placeholder="اختر موقعك أو مدينتك" />
                   </SelectTrigger>
                   <SelectContent>
@@ -146,7 +147,7 @@ const HeroSection = () => {
                 variant="hero" 
                 size="lg" 
                 onClick={handleSearch}
-                className="h-14 px-10 text-base rounded-2xl shadow-glow hover:shadow-xl"
+                className="h-12 sm:h-14 px-8 sm:px-10 text-sm sm:text-base rounded-xl sm:rounded-2xl shadow-glow hover:shadow-xl w-full"
               >
                 ابحث الآن
               </Button>
@@ -154,24 +155,24 @@ const HeroSection = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 md:gap-6 max-w-2xl mx-auto pt-8">
-            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 max-w-2xl mx-auto pt-4 sm:pt-6 md:pt-8 px-2">
+            <div className="text-center p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold bg-gradient-to-l from-primary to-primary-glow bg-clip-text text-transparent mb-1 sm:mb-2 group-hover:scale-110 transition-smooth">
                 {stats.stores > 0 ? `+${stats.stores}` : "0"}
               </div>
-              <div className="text-sm md:text-lg font-semibold text-foreground">متجر محلي</div>
+              <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">متجر محلي</div>
             </div>
-            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-card hover:shadow-glow group">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
+            <div className="text-center p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-secondary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold bg-gradient-to-l from-secondary to-accent bg-clip-text text-transparent mb-1 sm:mb-2 group-hover:scale-110 transition-smooth">
                 {stats.offers > 0 ? `+${stats.offers}` : "0"}
               </div>
-              <div className="text-sm md:text-lg font-semibold text-foreground">منتج وعرض</div>
+              <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">منتج وعرض</div>
             </div>
-            <div className="text-center p-4 md:p-6 rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
-              <div className="text-3xl md:text-5xl font-bold bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-smooth">
+            <div className="text-center p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-md border-2 border-border/50 hover:border-primary/50 transition-smooth shadow-card hover:shadow-glow group">
+              <div className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-transparent mb-1 sm:mb-2 group-hover:scale-110 transition-smooth">
                 {stats.cities > 0 ? `+${stats.cities}` : "0"}
               </div>
-              <div className="text-sm md:text-lg font-semibold text-foreground">مدينة</div>
+              <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-foreground">مدينة</div>
             </div>
           </div>
         </div>
